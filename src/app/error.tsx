@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 export default function Error({
   error,
   reset,
@@ -14,12 +16,20 @@ export default function Error({
         <p className="text-gray-400 text-sm mb-6">
           {error.message || 'An unexpected error occurred.'}
         </p>
-        <button
-          onClick={reset}
-          className="bg-gradient-to-r from-[#f5a623] to-[#ffd700] text-[#0a1628] font-semibold px-6 py-3 rounded-xl text-sm hover:opacity-90 transition-opacity"
-        >
-          Try again
-        </button>
+        <div className="flex flex-col gap-3 items-center">
+          <button
+            onClick={reset}
+            className="bg-gradient-to-r from-[#f5a623] to-[#ffd700] text-[#0a1628] font-semibold px-6 py-3 rounded-xl text-sm hover:opacity-90 transition-opacity"
+          >
+            Try again
+          </button>
+          <Link
+            href="/chat"
+            className="text-gray-400 text-sm hover:text-white transition-colors"
+          >
+            Go home
+          </Link>
+        </div>
       </div>
     </main>
   );
