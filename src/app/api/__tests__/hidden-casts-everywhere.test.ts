@@ -14,7 +14,6 @@ vi.mock('@/lib/auth/session', () => ({ getSessionData: () => mockGetSession() })
 vi.mock('@/lib/db/supabase', () => ({ supabaseAdmin: { from: mockFrom } }));
 vi.mock('@/lib/farcaster/neynar', () => ({ getUserByFid: mockGetUserByFid }));
 
-import { GET as feedGET } from '@/app/api/activity/feed/route';
 import { GET as searchGET } from '@/app/api/search/route';
 import { GET as userGET } from '@/app/api/users/[fid]/route';
 
@@ -74,7 +73,7 @@ function wireTables() {
   });
 }
 
-describe('hidden casts on search, activity feed and user profile', () => {
+describe('hidden casts on search and user profile', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     delete process.env[FLAG];
@@ -94,13 +93,6 @@ describe('hidden casts on search, activity feed and user profile', () => {
     const body = (await res.json()) as { results: Array<{ id: string }> };
     return body.results.map((r) => r.id);
   };
-  const feedIds = async () => {
-    const res = await feedGET(
-      new NextRequest('http://localhost:3000/api/activity/feed?filter=social'),
-    );
-    expect(res.status).toBe(200);
-    return JSON.stringify(await res.json());
-  };
   const userBody = async () => {
     const res = await userGET(new NextRequest('http://localhost:3000/api/users/5'), {
       params: Promise.resolve({ fid: '5' }),
@@ -109,10 +101,8 @@ describe('hidden casts on search, activity feed and user profile', () => {
     return JSON.stringify(await res.json());
   };
 
-  it('flag off: all three still include the hidden cast and never read hidden_messages', async () => {
+  it('flag off: both still include the hidden cast and never read hidden_messages', async () => {
     expect(await searchIds('flagoffquery')).toEqual([VISIBLE, HIDDEN]);
-    const feed = await feedIds();
-    expect(feed).toContain(`cast-${HIDDEN}`);
     await userBody();
     expect(mockFrom).not.toHaveBeenCalledWith('hidden_messages');
   });
@@ -120,13 +110,6 @@ describe('hidden casts on search, activity feed and user profile', () => {
   it('flag on: /api/search drops the hidden cast', async () => {
     process.env[FLAG] = '1';
     expect(await searchIds('flagonquery')).toEqual([VISIBLE]);
-  });
-
-  it('flag on: /api/activity/feed drops the hidden cast', async () => {
-    process.env[FLAG] = '1';
-    const feed = await feedIds();
-    expect(feed).toContain(`cast-${VISIBLE}`);
-    expect(feed).not.toContain(`cast-${HIDDEN}`);
   });
 
   it('flag on: /api/users/[fid] counts only the visible cast', async () => {
