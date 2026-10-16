@@ -106,10 +106,14 @@ export async function getTrendingFeed(limit = 25, timeWindow = '24h', cursor?: s
   });
   if (cursor) params.set('cursor', cursor);
 
-  const res = await fetchWithFailover(`/feed/trending?${params}`, {
-    headers: readHeaders(),
-    next: { revalidate: 0 },
-  }, { validate: hasCasts });
+  const res = await fetchWithFailover(
+    `/feed/trending?${params}`,
+    {
+      headers: readHeaders(),
+      next: { revalidate: 0 },
+    },
+    { validate: hasCasts },
+  );
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Neynar trending feed error ${res.status}: ${body.slice(0, 200)}`);
@@ -125,10 +129,14 @@ export async function getChannelFeed(channelId: string, cursor?: string, limit =
   });
   if (cursor) params.set('cursor', cursor);
 
-  const res = await fetchWithFailover(`/feed/channels?${params}`, {
-    headers: readHeaders(),
-    next: { revalidate: 0 },
-  }, { validate: hasCasts });
+  const res = await fetchWithFailover(
+    `/feed/channels?${params}`,
+    {
+      headers: readHeaders(),
+      next: { revalidate: 0 },
+    },
+    { validate: hasCasts },
+  );
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Neynar feed error ${res.status}: ${body.slice(0, 200)}`);
@@ -151,10 +159,14 @@ export async function getFollowingFeed(fid: number, cursor?: string, limit = 25)
   });
   if (cursor) params.set('cursor', cursor);
 
-  const res = await fetchWithFailover(`/feed/following?${params}`, {
-    headers: readHeaders(),
-    next: { revalidate: 0 },
-  }, { validate: hasCasts });
+  const res = await fetchWithFailover(
+    `/feed/following?${params}`,
+    {
+      headers: readHeaders(),
+      next: { revalidate: 0 },
+    },
+    { validate: hasCasts },
+  );
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Neynar following feed error ${res.status}: ${body.slice(0, 200)}`);
