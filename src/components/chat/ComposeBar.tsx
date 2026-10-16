@@ -11,9 +11,9 @@ const ALL_CHANNELS = communityConfig.farcaster.channels.map((id) => ({ id, label
 function buildSophaAttribution(quotedCast: QuotedCastData): string {
   const curator = quotedCast._curators?.[0]?.username;
   if (curator) {
-    return `\n\n— Curated by @${curator} on @sopha_social, shared via ZAOOS`;
+    return `\n\n— Curated by @${curator} on @sopha_social, shared via The ZAO app`;
   }
-  return `\n\n— Curated by @sopha_social, shared via ZAOOS`;
+  return `\n\n— Curated by @sopha_social, shared via The ZAO app`;
 }
 
 export interface ReplyContext {

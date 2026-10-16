@@ -2,7 +2,7 @@
 
 export function RequestAccessButton() {
   const requestAccess = () => {
-    const text = encodeURIComponent('@zaal requesting access to ZAO OS!');
+    const text = encodeURIComponent('@zaal requesting access to The ZAO app!');
     const url = `https://warpcast.com/~/compose?text=${text}&channelKey=zao`;
     window.open(url, '_blank');
   };

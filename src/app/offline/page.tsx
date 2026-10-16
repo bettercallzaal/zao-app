@@ -31,7 +31,7 @@ export default function OfflinePage() {
 
       <h1 className="text-xl font-bold text-white mb-2">You are offline</h1>
       <p className="text-sm text-gray-400 max-w-xs mb-8">
-        ZAO OS needs an internet connection to load new content. Check your connection and try
+        The ZAO app needs an internet connection to load new content. Check your connection and try
         again.
       </p>
 

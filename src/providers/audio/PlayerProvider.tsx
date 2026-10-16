@@ -269,7 +269,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: state.metadata.trackName,
       artist: state.metadata.artistName || 'ZAO Radio',
-      album: 'ZAO OS',
+      album: 'The ZAO',
       artwork: state.metadata.artworkUrl
         ? [{ src: state.metadata.artworkUrl, sizes: '512x512', type: 'image/jpeg' }]
         : [],

@@ -234,7 +234,7 @@ export async function POST(req: NextRequest) {
               createInAppNotification({
                 recipientFids: [...adminFids],
                 type: 'member',
-                title: 'New member joined ZAO OS',
+                title: 'New member joined The ZAO app',
                 body: `${user.display_name || user.username || 'A new user'} logged in for the first time`,
                 href: '/admin',
                 actorFid: fid,

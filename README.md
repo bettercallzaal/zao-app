@@ -1,8 +1,10 @@
-# zcaster
+# The ZAO app
 
-zcaster is a lean public Farcaster client for The ZAO. It has the ZAO feed, casting, replies, and the song player that plays music inside casts.
+The ZAO app is The ZAO's lean public client at [zaoos.com](https://zaoos.com), built on Farcaster. It has the ZAO feed, casting, replies, and the song player that plays music inside casts.
 
-It is extracted from [bettercallzaal/ZAOOS](https://github.com/bettercallzaal/ZAOOS), the ZAO lab monorepo, using `git filter-repo` so the history of the kept files (and their credit) is preserved. ZAOOS stays the lab. zcaster is the portable client.
+The ZAO is a decentralized impact network that returns profit margin, data and IP rights to artists, starting with music. More at [thezao.xyz](https://thezao.xyz).
+
+It is extracted from [bettercallzaal/ZAOOS](https://github.com/bettercallzaal/ZAOOS), the ZAO lab monorepo, using `git filter-repo` so the history of the kept files (and their credit) is preserved. ZAOOS stays the lab. This repo is the lean client.
 
 ## v1 scope
 

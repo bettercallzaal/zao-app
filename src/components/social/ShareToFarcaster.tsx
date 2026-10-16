@@ -191,7 +191,7 @@ export const shareTemplates = {
   proposal: (title: string, action: 'created' | 'voted'): ShareTemplate => ({
     text:
       action === 'created'
-        ? `New proposal in The ZAO: "${title}"\n\nCommunity-driven governance — your Respect tokens = your voting power\n\nVote now on ZAO OS`
+        ? `New proposal in The ZAO: "${title}"\n\nCommunity-driven governance — your Respect tokens = your voting power\n\nVote now on The ZAO app`
         : `Just voted on "${title}" in The ZAO\n\nOn-chain governance by the community, for the community\n\nHave your say`,
     embeds: ['https://zaoos.com/governance'],
     channel: 'zao',
@@ -223,8 +223,8 @@ export const shareTemplates = {
   /** Share a song submission */
   songSubmission: (trackName: string, note?: string): ShareTemplate => ({
     text: note
-      ? `Just submitted "${trackName}" to The ZAO\n\n"${note}"\n\nCommunity-curated music. Listen and discover on ZAO OS`
-      : `Just submitted "${trackName}" to The ZAO\n\nCommunity-curated music. Listen and discover on ZAO OS`,
+      ? `Just submitted "${trackName}" to The ZAO\n\n"${note}"\n\nCommunity-curated music. Listen and discover on The ZAO app`
+      : `Just submitted "${trackName}" to The ZAO\n\nCommunity-curated music. Listen and discover on The ZAO app`,
     embeds: ['https://zaoos.com'],
     channel: 'zao',
   }),
@@ -253,8 +253,8 @@ export const shareTemplates = {
   /** Share a fractal call */
   fractalCall: (weekNumber?: number): ShareTemplate => ({
     text: weekNumber
-      ? `Fractal Call Week ${weekNumber} happening in The ZAO\n\nPeer-ranked contributions. Fibonacci scoring. Earn Respect.\n\nJoin the call on ZAO OS`
-      : `Fractal calls are how The ZAO distributes Respect\n\nPeer-ranked contributions. Fibonacci scoring. Community governance.\n\nJoin on ZAO OS`,
+      ? `Fractal Call Week ${weekNumber} happening in The ZAO\n\nPeer-ranked contributions. Fibonacci scoring. Earn Respect.\n\nJoin the call on The ZAO app`
+      : `Fractal calls are how The ZAO distributes Respect\n\nPeer-ranked contributions. Fibonacci scoring. Community governance.\n\nJoin on The ZAO app`,
     embeds: ['https://zaoos.com/governance'],
     channel: 'zao',
   }),

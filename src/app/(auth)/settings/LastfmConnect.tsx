@@ -22,7 +22,7 @@ export function LastfmConnect() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-white">Last.fm</p>
-          <p className="text-xs text-gray-500">Scrobble your ZAO OS plays to Last.fm</p>
+          <p className="text-xs text-gray-500">Scrobble your plays in The ZAO app to Last.fm</p>
         </div>
         {status.connected ? (
           <button

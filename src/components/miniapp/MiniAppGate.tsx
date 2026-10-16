@@ -131,7 +131,7 @@ export function MiniAppGate({ children }: MiniAppGateProps) {
 
 function NoAccessScreen({ username }: { username: string }) {
   const requestAccess = useCallback(async () => {
-    const text = encodeURIComponent(`@zaal requesting access to ZAO OS!`);
+    const text = encodeURIComponent(`@zaal requesting access to The ZAO app!`);
     const url = `https://warpcast.com/~/compose?text=${text}&channelKey=zao`;
     try {
       const { sdk } = await import('@farcaster/miniapp-sdk');
@@ -159,7 +159,7 @@ function NoAccessScreen({ username }: { username: string }) {
         <div className="bg-[#0d1b2a] rounded-xl p-6 border border-white/[0.08] mb-6">
           <p className="text-white text-sm mb-1">Hey {username || 'there'}!</p>
           <p className="text-gray-400 text-sm">
-            ZAO OS is currently invite-only. Post in /zao and tag @zaal to request access.
+            The ZAO app is currently invite-only. Post in /zao and tag @zaal to request access.
           </p>
         </div>
 

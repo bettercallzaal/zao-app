@@ -5,20 +5,20 @@ import { LoginButton } from '@/components/gate/LoginButton';
 import { getSessionData } from '@/lib/auth/session';
 
 export const metadata: Metadata = {
-  title: 'ZAO OS — The ZAO Community',
+  title: 'The ZAO app',
   description:
-    'A gated Farcaster community for music artists who govern, collaborate, and build onchain together. Encrypted messaging, live audio spaces, and respect-weighted governance.',
+    "The ZAO's feed and song player, built on Farcaster. Read and post with any Farcaster account, and play the music shared in the feed.",
   openGraph: {
-    title: 'ZAO OS — The ZAO Community',
+    title: 'The ZAO app',
     description:
-      'A gated Farcaster community for music artists who govern, collaborate, and build onchain together.',
+      "The ZAO's feed and song player, built on Farcaster. Read and post with any Farcaster account, and play the music shared in the feed.",
     url: 'https://zaoos.com',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ZAO OS — The ZAO Community',
+    title: 'The ZAO app',
     description:
-      'A gated Farcaster community for music artists who govern, collaborate, and build onchain together.',
+      "The ZAO's feed and song player, built on Farcaster. Read and post with any Farcaster account, and play the music shared in the feed.",
   },
 };
 

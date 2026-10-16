@@ -166,7 +166,7 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data.json();
   } catch {
-    data = { title: 'ZAO OS', body: event.data.text() };
+    data = { title: 'The ZAO app', body: event.data.text() };
   }
 
   const options = {
@@ -179,7 +179,7 @@ self.addEventListener('push', (event) => {
     renotify: true,
   };
 
-  event.waitUntil(self.registration.showNotification(data.title || 'ZAO OS', options));
+  event.waitUntil(self.registration.showNotification(data.title || 'The ZAO app', options));
 });
 
 // Notification click — open or focus the app
