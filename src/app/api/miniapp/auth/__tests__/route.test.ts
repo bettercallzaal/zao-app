@@ -30,7 +30,12 @@ import { GET } from '../route';
 function req(auth: string | null = 'Bearer good.jwt.token') {
   return makeRequest('/api/miniapp/auth', auth ? { headers: { Authorization: auth } } : undefined);
 }
-const USER = { username: 'u', display_name: 'U', pfp_url: 'p', verified_addresses: { eth_addresses: ['0xabc'] } };
+const USER = {
+  username: 'u',
+  display_name: 'U',
+  pfp_url: 'p',
+  verified_addresses: { eth_addresses: ['0xabc'] },
+};
 
 beforeEach(() => {
   mockVerifyJwt.mockResolvedValue({ sub: '42' });
