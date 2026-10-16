@@ -44,7 +44,7 @@ function flattenThread(cast: Record<string, unknown>): Cast[] {
   return result;
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ hash: string }> }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ hash: string }> }) {
   const session = await getSessionData();
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
