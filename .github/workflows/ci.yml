@@ -1,0 +1,78 @@
+# Typecheck, unit tests and a production build on every PR and push to main.
+#
+# Runner switch, the same as bettercallzaal/wwtracker's checks.yml. Unset
+# CI_RUNNER = GitHub-hosted ubuntu-latest. This repo is public, so hosted
+# minutes are free here. Do NOT set the CI_RUNNER repo variable without a
+# reason: a self-hosted runner is only used for same-repo PRs and pushes (see
+# the fork rule below).
+name: ci
+
+# One run per ref. A new push cancels the older run for the same ref so a
+# stale result is never reported next to a commit it does not describe.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: typecheck, tests, build
+    # Fork rule. On a PUBLIC repo, a pull_request from a fork must NEVER run
+    # on a self-hosted runner: the fork's code would execute on our machine.
+    # So a fork PR always gets ubuntu-latest. Same-repo PRs, pushes and manual
+    # runs use CI_RUNNER when it is set, and ubuntu-latest when it is not.
+    # Do not simplify this to plain vars.CI_RUNNER.
+    runs-on: >-
+      ${{
+        (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository)
+          && 'ubuntu-latest'
+          || (vars.CI_RUNNER || 'ubuntu-latest')
+      }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        # GitHub-hosted only: on a self-hosted Mac, setup-node fails writing its
+        # tool cache ("mkdir: /Users/runner: Permission denied"), so the Mac's
+        # own node is used instead, gated by the next step.
+        if: runner.environment == 'github-hosted'
+        with:
+          # Read from .nvmrc (22) so local and CI cannot drift apart.
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Node 22 or newer on the self-hosted runner
+        if: runner.environment == 'self-hosted'
+        # package.json needs node 22 or newer. Fail here, by name, rather than
+        # as an obscure error three steps later.
+        run: |
+          command -v node && node --version
+          node -e 'const [maj] = process.versions.node.split(".").map(Number); if (maj < 22) { console.error("node " + process.versions.node + " is too old for this repo (needs 22 or newer); install Node 22 where the runner service can find it"); process.exit(1); }'
+
+      - run: npm ci
+
+      - run: npx tsc --noEmit
+
+      - run: npx vitest run
+
+      - name: Production build
+        # Placeholder values only. These satisfy requireEnv() in src/lib/env.ts
+        # at build time. They are not secrets and they are not real endpoints.
+        # Never put a real key in this file.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_NEYNAR_CLIENT_ID: placeholder-client-id
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
+          NEYNAR_API_KEY: placeholder-neynar-api-key
+          SESSION_SECRET: placeholder-session-secret-at-least-32-chars-long
+          APP_FID: "1"
+          APP_SIGNER_PRIVATE_KEY: "0x0000000000000000000000000000000000000000000000000000000000000001"
+        run: npm run build
