@@ -40,26 +40,21 @@ if [ -n "$PREV" ] && ! git cat-file -e "$PREV" 2>/dev/null; then
   git fetch --depth=1 origin "$PREV" 2>/dev/null || true
 fi
 
-# 3. Diff base: the previous deploy's SHA when reachable, else this commit's
-#    parent (deepen by one if the shallow clone lacks it). Only when NO base
-#    exists do we fall through to the safe default of building.
-BASE=""
-if [ -n "$PREV" ] && git cat-file -e "$PREV" 2>/dev/null; then
-  BASE="$PREV"
-else
-  git rev-parse --verify -q HEAD^ >/dev/null 2>&1 || git fetch --deepen=1 origin 2>/dev/null || true
-  if git rev-parse --verify -q HEAD^ >/dev/null 2>&1; then
-    BASE="HEAD^"
-  fi
-fi
-if [ -z "$BASE" ]; then
-  echo "[vercel-ignore] no diff base reachable (prev=${PREV:-unset}) -> BUILD (safe default)"
+# 3. Diff base: ONLY the previous deploy's SHA. Diffing against HEAD^ instead
+#    would compare one commit when several landed since the last deploy (an
+#    earlier code change would be skipped), and a first deploy whose HEAD is
+#    docs-only would never deploy. So no reachable previous deploy -> BUILD.
+if [ -z "$PREV" ] || ! git cat-file -e "$PREV" 2>/dev/null; then
+  echo "[vercel-ignore] previous deploy not reachable (prev=${PREV:-unset}) -> BUILD (safe default)"
   exit 1
 fi
+BASE="$PREV"
 
 # 4. Build only if a build-relevant, non-test file changed since the base.
 #    git diff --quiet exits 0 (no change -> SKIP) or 1 (changed -> BUILD).
-if git diff --quiet "$BASE" HEAD -- "${BUILD_PATHS[@]}" "${TEST_ONLY[@]}"; then
+# --no-renames: a move is checked as a delete plus an add, so moving a file
+#    into or out of a build path is always seen.
+if git diff --quiet --no-renames "$BASE" HEAD -- "${BUILD_PATHS[@]}" "${TEST_ONLY[@]}"; then
   echo "[vercel-ignore] no build-relevant change vs $BASE -> SKIP"
   exit 0
 else
