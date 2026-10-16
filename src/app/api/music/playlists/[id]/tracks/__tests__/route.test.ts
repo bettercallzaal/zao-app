@@ -15,7 +15,7 @@ vi.mock('@/lib/db/supabase', () => ({ supabaseAdmin: { from: mockFrom } }));
 vi.mock('@/lib/music/library', () => ({ addToPlaylist: mockAddToPlaylist }));
 vi.mock('@/lib/logger', () => ({ logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
 
-import { DELETE } from '../route';
+import { DELETE, POST } from '../route';
 
 const SONG_ID = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -96,5 +96,83 @@ describe('DELETE /api/music/playlists/[id]/tracks - ownership (IDOR)', () => {
 
     const res = await DELETE(delReq(), ctx);
     expect(res.status).toBe(200);
+  });
+});
+
+function postReq(body: unknown = { songId: SONG_ID }) {
+  return makeRequest('/api/music/playlists/p1/tracks', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+describe('POST /api/music/playlists/[id]/tracks - ownership', () => {
+  it('rejects unauthenticated with 401, before any database call', async () => {
+    mockGetSessionData.mockResolvedValue(null);
+    const res = await POST(postReq(), ctx);
+    expect(res.status).toBe(401);
+    expect(mockFrom).not.toHaveBeenCalled();
+    expect(mockAddToPlaylist).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for a non-UUID playlist id, before any database call', async () => {
+    const res = await POST(postReq(), { params: Promise.resolve({ id: 'p1' }) });
+    expect(res.status).toBe(400);
+    expect(mockFrom).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for a non-UUID song id', async () => {
+    const res = await POST(postReq({ songId: 'not-a-uuid' }), ctx);
+    expect(res.status).toBe(400);
+    expect(mockAddToPlaylist).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when the caller does not own a non-collaborative playlist', async () => {
+    const playlistChain = chainMock({
+      data: { created_by_fid: 999, collaborative: false },
+      error: null,
+    });
+    mockFrom.mockReturnValueOnce(playlistChain.chain);
+    const res = await POST(postReq(), ctx);
+    expect(res.status).toBe(403);
+    expect(mockAddToPlaylist).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 when the playlist does not exist', async () => {
+    mockFrom.mockReturnValueOnce(chainMock({ data: null, error: null }).chain);
+    const res = await POST(postReq(), ctx);
+    expect(res.status).toBe(404);
+    expect(mockAddToPlaylist).not.toHaveBeenCalled();
+  });
+
+  it('lets the owner add a track (200)', async () => {
+    mockFrom.mockReturnValueOnce(
+      chainMock({ data: { created_by_fid: 100, collaborative: false }, error: null }).chain,
+    );
+    mockAddToPlaylist.mockResolvedValue(undefined);
+    const res = await POST(postReq(), ctx);
+    expect(res.status).toBe(200);
+    expect(mockAddToPlaylist).toHaveBeenCalledWith(PLAYLIST_ID, SONG_ID, 100);
+  });
+
+  it('lets anyone signed in add to a collaborative playlist (200)', async () => {
+    mockFrom.mockReturnValueOnce(
+      chainMock({ data: { created_by_fid: 999, collaborative: true }, error: null }).chain,
+    );
+    mockAddToPlaylist.mockResolvedValue(undefined);
+    const res = await POST(postReq(), ctx);
+    expect(res.status).toBe(200);
+    expect(mockAddToPlaylist).toHaveBeenCalledWith(PLAYLIST_ID, SONG_ID, 100);
+  });
+
+  it('returns a sanitized 500 when the playlist lookup errors', async () => {
+    mockFrom.mockReturnValueOnce(
+      chainMock({ data: null, error: { message: 'db down: secret detail' } }).chain,
+    );
+    const res = await POST(postReq(), ctx);
+    expect(res.status).toBe(500);
+    expect(JSON.stringify(await res.json())).not.toContain('secret detail');
+    expect(mockAddToPlaylist).not.toHaveBeenCalled();
   });
 });
