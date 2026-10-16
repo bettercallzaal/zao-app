@@ -247,7 +247,7 @@ export async function POST(req: NextRequest) {
                 type: 'member',
                 title: 'New member joined The ZAO app',
                 body: `${user.display_name || user.username || 'A new user'} logged in for the first time`,
-                href: '/admin',
+                href: '/chat',
                 actorFid: fid,
                 actorDisplayName: user.display_name,
                 actorPfpUrl: user.pfp_url,

@@ -10,27 +10,6 @@ import { NotificationBell } from './NotificationBell';
 // Primary tabs shown in the bottom bar
 const PRIMARY_TABS = [
   {
-    id: 'home',
-    label: 'Home',
-    href: '/home',
-    matchPaths: ['/home'],
-    icon: (
-      <svg
-        className="w-5 h-5 md:w-4 md:h-4"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
-        />
-      </svg>
-    ),
-  },
-  {
     id: 'chat',
     label: 'Chat',
     href: '/chat',
@@ -55,36 +34,11 @@ const PRIMARY_TABS = [
 
 // Secondary pages shown in the "More" dropdown/sheet
 const MORE_ITEMS = [
-  { label: 'Social', href: '/social', icon: '👥' },
-  { label: 'Spaces', href: '/spaces', icon: '🎙️' },
-  { label: 'Ecosystem', href: '/ecosystem', icon: '🌐' },
-  { label: 'Calls', href: '/calls', icon: '📞' },
-  { label: 'WaveWarZ', href: '/wavewarz', icon: '⚔️' },
-  { label: 'Tools', href: '/tools', icon: '🔧' },
-  { label: 'Contribute', href: '/contribute', icon: '💻' },
-  { label: 'Members', href: '/members', icon: '👤' },
-  { label: 'Assistant', href: '/assistant', icon: '🤖' },
   { label: 'Notifications', href: '/notifications', icon: '🔔' },
-  { label: 'Library', href: '/library', icon: '📚' },
-  { label: 'Overview', href: '/overview', icon: '🗺️' },
   { label: 'Settings', href: '/settings', icon: '⚙️' },
 ] as const;
 
-const MORE_MATCH_PATHS = [
-  '/overview',
-  '/ecosystem',
-  '/tools',
-  '/contribute',
-  '/settings',
-  '/social',
-  '/spaces',
-  '/wavewarz',
-  '/members',
-  '/assistant',
-  '/notifications',
-  '/calls',
-  '/library',
-];
+const MORE_MATCH_PATHS = ['/notifications', '/settings'];
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -94,7 +48,7 @@ export function BottomNav() {
 
   const activeTab =
     PRIMARY_TABS.find((tab) => tab.matchPaths.some((p) => pathname.startsWith(p)))?.id ||
-    (MORE_MATCH_PATHS.some((p) => pathname.startsWith(p)) ? 'more' : 'home');
+    (MORE_MATCH_PATHS.some((p) => pathname.startsWith(p)) ? 'more' : null);
 
   return (
     <>
@@ -146,44 +100,46 @@ export function BottomNav() {
                 </Link>
               );
             })}
-            {/* Desktop overflow dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setMoreOpen(!moreOpen)}
-                aria-label="More navigation items"
-                aria-expanded={moreOpen}
-                aria-haspopup="menu"
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  moreOpen
-                    ? 'bg-white/10 text-white'
-                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-                }`}
-              >
-                <span aria-hidden="true">···</span>
-              </button>
-              {moreOpen && (
-                <>
-                  <div className="fixed inset-0 z-30" onClick={() => setMoreOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-40 bg-[#0d1b2a] border border-white/[0.08] rounded-xl shadow-xl py-1 min-w-[160px]">
-                    {MORE_ITEMS.slice(4).map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setMoreOpen(false)}
-                        className={`flex items-center gap-2.5 px-4 py-2.5 text-xs transition-colors ${
-                          pathname.startsWith(item.href)
-                            ? 'text-[#f5a623] bg-white/5'
-                            : 'text-gray-300 hover:bg-white/5 hover:text-white'
-                        }`}
-                      >
-                        <span>{item.icon}</span>
-                        <span>{item.label}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+            {/* Desktop overflow dropdown, only when there are more than 4 items */}
+            {MORE_ITEMS.length > 4 && (
+              <div className="relative">
+                <button
+                  onClick={() => setMoreOpen(!moreOpen)}
+                  aria-label="More navigation items"
+                  aria-expanded={moreOpen}
+                  aria-haspopup="menu"
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    moreOpen
+                      ? 'bg-white/10 text-white'
+                      : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                  }`}
+                >
+                  <span aria-hidden="true">···</span>
+                </button>
+                {moreOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setMoreOpen(false)} />
+                    <div className="absolute right-0 top-full mt-1 z-40 bg-[#0d1b2a] border border-white/[0.08] rounded-xl shadow-xl py-1 min-w-[160px]">
+                      {MORE_ITEMS.slice(4).map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMoreOpen(false)}
+                          className={`flex items-center gap-2.5 px-4 py-2.5 text-xs transition-colors ${
+                            pathname.startsWith(item.href)
+                              ? 'text-[#f5a623] bg-white/5'
+                              : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          <span>{item.icon}</span>
+                          <span>{item.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
           {/* Now playing indicator */}
           {isPlaying && player.metadata && (

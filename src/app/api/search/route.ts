@@ -199,7 +199,7 @@ export async function GET(req: NextRequest) {
                 id: String(row.id),
                 title: row.title || 'Untitled Track',
                 snippet: snippet([row.artist, row.note].filter(Boolean).join(' - ')),
-                href: '/music',
+                href: '/chat',
                 timestamp: row.submitted_at || '',
                 metadata: {
                   artist: row.artist,

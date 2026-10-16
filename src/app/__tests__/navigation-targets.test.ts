@@ -1,7 +1,8 @@
 // @vitest-environment node
 /**
- * Every place the app SENDS someone (a server redirect, a client push, or a
- * redirect field an API returns) must land on a page this app ships. On
+ * Every place the app SENDS someone (a server redirect, a client push, a
+ * redirect field an API returns, or an href link) must land on a page this
+ * app ships. On
  * 2026-10-16 sign-in sent members to /os, a page this app does not have, so a
  * successful sign-in ended on a 404.
  */
@@ -33,10 +34,17 @@ const pages = new Set(
     }),
 );
 
+/** Static files under public/ are served at their own path (e.g. /manifest.json). */
+const PUBLIC = join(process.cwd(), 'public');
+for (const f of walk(PUBLIC)) pages.add(`/${relative(PUBLIC, f).split(sep).join('/')}`);
+
 const PATTERNS = [
   /\bredirect\(\s*['"`](\/[^'"`?#]*)/g,
   /\brouter\.(?:push|replace)\(\s*['"`](\/[^'"`?#]*)/g,
   /\bredirect:\s*['"`](\/[^'"`?#]*)/g,
+  // Links: JSX href="/x", href={'/x'}, and nav config objects href: '/x'.
+  /\bhref=\{?\s*['"`](\/[^'"`?#]*)/g,
+  /\bhref:\s*['"`](\/[^'"`?#]*)/g,
 ];
 
 const targets = walk(SRC)
@@ -55,7 +63,7 @@ describe('navigation targets', () => {
     expect(targets.length).toBeGreaterThan(5);
   });
 
-  it('every redirect and push lands on a page this app ships', () => {
+  it('every redirect, push and link lands on a page this app ships', () => {
     const dead = targets.filter((t) => !pages.has(t.target.replace(/\/$/, '') || '/'));
     expect(dead).toEqual([]);
   });
