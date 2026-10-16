@@ -251,7 +251,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      redirect: '/os',
+      redirect: '/chat',
     });
   } catch (error) {
     logger.error('Auth verify error:', error);

@@ -55,7 +55,7 @@ export default function GlobalError({
               Try again
             </button>
             <a
-              href="/os"
+              href="/chat"
               style={{
                 color: '#9ca3af',
                 fontSize: '0.875rem',

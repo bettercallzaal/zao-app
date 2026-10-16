@@ -54,7 +54,7 @@ export default function AuthError({
             Try again
           </button>
           <Link
-            href="/home"
+            href="/chat"
             className="text-sm text-gray-400 hover:text-white transition-colors py-1"
           >
             Go home

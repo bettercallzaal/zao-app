@@ -35,7 +35,7 @@ export function LoginButton() {
           if (res.ok) {
             const data = await res.json();
             if (data.fid) {
-              router.push('/os');
+              router.push('/chat');
             }
           }
         } catch {

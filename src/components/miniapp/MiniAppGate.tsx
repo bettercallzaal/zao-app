@@ -75,7 +75,7 @@ export function MiniAppGate({ children }: MiniAppGateProps) {
             if (data.hasAccess) {
               setState('allowed');
               if (path === '/' || path === '/home') {
-                router.replace('/home');
+                router.replace('/chat');
               }
             } else {
               setUsername(data.username || '');

@@ -6,7 +6,6 @@ import { BottomNav } from '@/components/navigation/BottomNav';
 import { CommandPaletteProvider } from '@/components/navigation/CommandPaletteProvider';
 import PWAInstallPrompt from '@/components/navigation/PWAInstallPrompt';
 import { HideOnOS } from '@/components/os/HideOnOS';
-import { OSBackButton } from '@/components/os/OSBackButton';
 import { LazyGlobalSearch } from '@/components/search/LazyGlobalSearch';
 import { getSessionData } from '@/lib/auth/session';
 import { AuthAudioProviders } from './providers';
@@ -44,7 +43,6 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
           <PWAInstallPrompt />
         </HideOnOS>
         <CommandPaletteProvider />
-        <OSBackButton />
       </div>
     </AuthAudioProviders>
   );
