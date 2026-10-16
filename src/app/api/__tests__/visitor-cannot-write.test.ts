@@ -5,6 +5,8 @@
  * REAL visitor cookie session (iron-session stubbed to hold one) and the flag
  * ON, and must refuse with 401/403 before touching the database or Neynar.
  */
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 import { NextRequest } from 'next/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -65,56 +67,46 @@ vi.mock('@/lib/logger', () => ({ logger: { error: vi.fn(), warn: vi.fn(), info: 
 
 type Handler = (req: NextRequest, ctx?: unknown) => Promise<Response>;
 
-// [route module under src/app/api, method] for every member write in the app.
-const WRITES: [string, 'POST' | 'PUT' | 'PATCH' | 'DELETE'][] = [
-  ['casts/delete', 'POST'],
-  ['casts/summary', 'POST'],
-  ['chat/hide', 'POST'],
-  ['chat/react', 'POST'],
-  ['chat/react', 'DELETE'],
-  ['chat/schedule', 'POST'],
-  ['chat/schedule', 'DELETE'],
-  ['chat/schedule', 'PATCH'],
-  ['chat/send', 'POST'],
-  ['music/comments', 'POST'],
-  ['music/comments', 'DELETE'],
-  ['music/library', 'POST'],
-  ['music/library/like', 'POST'],
-  ['music/library/play', 'POST'],
-  ['music/library/react', 'POST'],
-  ['music/playlists', 'POST'],
-  ['music/scrobble', 'POST'],
-  ['music/submissions', 'POST'],
-  ['music/submissions', 'DELETE'],
-  ['neynar/cast', 'POST'],
-  ['neynar/follow', 'POST'],
-  ['neynar/like', 'POST'],
-  ['neynar/recast', 'POST'],
-  ['notifications', 'PATCH'],
-  ['upload', 'POST'],
-  ['users/block', 'POST'],
-  ['users/block', 'DELETE'],
-  ['users/follow', 'POST'],
-  ['users/follow', 'DELETE'],
-  ['users/mute', 'POST'],
-  ['users/mute', 'DELETE'],
-  ['users/profile', 'PATCH'],
-  ['users/socials', 'PATCH'],
-  ['users/wallet-visibility', 'PATCH'],
-  ['auth/signer', 'POST'],
-  ['auth/signer/save', 'POST'],
-  ['auth/lastfm/disconnect', 'POST'],
-  ['auth/listenbrainz', 'POST'],
-  ['auth/listenbrainz', 'DELETE'],
-  ['platforms/facebook', 'DELETE'],
-  ['platforms/kick', 'DELETE'],
-  ['platforms/twitch', 'DELETE'],
-];
+/**
+ * Routes that write WITHOUT a member session by design. Everything else under
+ * src/app/api that exports POST/PUT/PATCH/DELETE is a member write and is
+ * tested below, so a new write route is covered the day it is added.
+ */
+const NOT_MEMBER_WRITES: Record<string, string> = {
+  'auth/verify': 'signs a person in (creates the session)',
+  'auth/logout': 'clears the caller’s own session',
+  'auth/register': 'pre-session wallet registration, gated by the allowlist',
+  'miniapp/auth-context': 'read-only context lookup; saves no session',
+  'miniapp/webhook': 'Farcaster webhook, verified by signature, not by session',
+};
+
+const API = join(process.cwd(), 'src/app/api');
+function routeFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) return e.name === '__tests__' ? [] : routeFiles(p);
+    return e.name === 'route.ts' ? [p] : [];
+  });
+}
+const WRITES: [string, string][] = routeFiles(API)
+  .map((p) => relative(API, p).split(sep).slice(0, -1).join('/'))
+  .filter((route) => !(route in NOT_MEMBER_WRITES))
+  .flatMap((route) =>
+    [
+      ...readFileSync(join(API, route, 'route.ts'), 'utf8').matchAll(
+        /export async function (POST|PUT|PATCH|DELETE)\b/g,
+      ),
+    ].map((m): [string, string] => [route, m[1]]),
+  );
 
 beforeAll(() => {
   vi.stubEnv('FARCASTER_OPEN_FRONT_DOOR', '1');
 });
 afterAll(() => vi.unstubAllEnvs());
+
+it('finds the member write routes (not an empty scan)', () => {
+  expect(WRITES.length).toBeGreaterThan(40);
+});
 
 describe.each([
   ['a visitor', null],
@@ -126,7 +118,10 @@ describe.each([
   it.each(WRITES)('%s %s refuses before any data access', async (route, method) => {
     visitor.signerUuid = signerUuid;
     touched.length = 0;
-    const mod = (await import(`@/app/api/${route}/route`)) as Record<string, Handler>;
+    const mod = (await import(/* @vite-ignore */ `@/app/api/${route}/route`)) as Record<
+      string,
+      Handler
+    >;
     const handler = mod[method];
     expect(handler, `${route} exports ${method}`).toBeTypeOf('function');
     const req = new NextRequest(new URL(`/api/${route}`, 'http://localhost:3000'), {
@@ -134,7 +129,11 @@ describe.each([
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ text: 'hi', fid: 1, targetFid: 1, castHash: `0x${'a'.repeat(40)}` }),
     });
-    const res = await handler(req, { params: Promise.resolve({}) });
+    // Dynamic segments get a well-formed value so validation is not what refuses.
+    const params = Object.fromEntries(
+      [...route.matchAll(/\[(\w+)\]/g)].map((m) => [m[1], '7c9e6679-7425-40de-944b-e07fc1f90ae7']),
+    );
+    const res = await handler(req, { params: Promise.resolve(params) });
     expect([401, 403], `${route} ${method} answered ${res.status}`).toContain(res.status);
     expect(touched).toEqual([]);
   });
