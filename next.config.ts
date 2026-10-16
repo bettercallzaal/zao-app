@@ -9,13 +9,6 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig: NextConfig = {
   async redirects() {
     return [
-      // A retired partner page (Zaal, 2026-10-05): zaoos.com/artizen is
-      // gone. Send old links home rather than 404.
-      {
-        source: '/artizen',
-        destination: '/',
-        permanent: false,
-      },
       {
         source: '/bcz-yapz',
         destination: 'https://bczyapz.com',
@@ -37,14 +30,6 @@ const nextConfig: NextConfig = {
         source: '/zabal/:path*',
         destination: 'https://zabal.art/:path*',
         permanent: true,
-      },
-      // The partner embed at this route is retired (Zaal, 2026-09-17). 301, not
-      // `permanent: true` (which sends 308): old links and search results land
-      // on the spaces list instead of breaking.
-      {
-        source: '/spaces/songjam', // [CLAIM-OK: songjam-live the retired URL, kept only so old links redirect]
-        destination: '/spaces',
-        statusCode: 301,
       },
     ]
   },

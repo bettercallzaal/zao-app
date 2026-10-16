@@ -245,7 +245,7 @@ export const shareTemplates = {
 
   /** Share the ecosystem */
   ecosystem: (): ShareTemplate => ({
-    text: `The ZAO Ecosystem\n\nZOUNZ DAO • SongJam • Empire Builder • MAGNETIQ • Incented • Clanker\n\nAll accessible from one app. Music artists building onchain.\n\nExplore the ecosystem`,
+    text: `The ZAO Ecosystem\n\nZOUNZ DAO • Empire Builder • Incented • Clanker\n\nAll accessible from one app. Music artists building onchain.\n\nExplore the ecosystem`,
     embeds: ['https://zaoos.com'],
     channel: 'zabal',
   }),
