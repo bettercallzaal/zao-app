@@ -80,7 +80,7 @@ export default function MiniAppPage() {
           const data = await response.json();
           if (data.hasAccess) {
             setAuthState('allowed');
-            window.location.href = '/home';
+            window.location.href = '/chat';
           } else {
             setUsername(data.username || '');
             setAuthState('denied');

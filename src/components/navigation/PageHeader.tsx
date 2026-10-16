@@ -5,7 +5,7 @@ import Link from 'next/link';
 export function PageHeader({
   title,
   subtitle,
-  backHref = '/home',
+  backHref = '/chat',
   rightAction,
   count,
 }: {

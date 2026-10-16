@@ -10,7 +10,9 @@ import { logger } from '@/lib/logger';
 // Schema
 // ---------------------------------------------------------------------------
 
-const SearchType = z.enum(['all', 'casts', 'proposals', 'music', 'members']);
+// Only content this app has a page for. Proposals and member profiles have
+// no page here, so their results would link to a 404.
+const SearchType = z.enum(['all', 'casts', 'music']);
 
 const searchParamsSchema = z.object({
   q: z.string().min(2, 'Query must be at least 2 characters').max(200),
@@ -23,7 +25,7 @@ const searchParamsSchema = z.object({
 // ---------------------------------------------------------------------------
 
 interface SearchResult {
-  type: 'cast' | 'proposal' | 'music' | 'member';
+  type: 'cast' | 'music';
   id: string;
   title: string;
   snippet: string;
@@ -136,43 +138,12 @@ export async function GET(req: NextRequest) {
                 id: row.hash,
                 title: row.author_display || row.author_username || 'Cast',
                 snippet: snippet(row.text),
-                href: `/chat/${row.channel_id}`,
+                href: '/chat',
                 timestamp: row.timestamp || '',
                 metadata: {
                   channel: row.channel_id,
                   author: row.author_display || row.author_username,
                   pfp: row.author_pfp,
-                },
-              });
-            }
-          }
-        })(),
-      );
-    }
-
-    // ── Proposals ────────────────────────────────────────────────────────
-    if (type === 'all' || type === 'proposals') {
-      searches.push(
-        (async () => {
-          const { data } = await supabaseAdmin
-            .from('proposals')
-            .select('id, title, description, status, created_at, author_fid')
-            .textSearch('search_vector', query, { type: 'websearch' })
-            .order('created_at', { ascending: false })
-            .limit(limit);
-
-          if (data) {
-            for (const row of data) {
-              results.push({
-                type: 'proposal',
-                id: String(row.id),
-                title: row.title || 'Untitled Proposal',
-                snippet: snippet(row.description),
-                href: `/governance/proposals/${row.id}`,
-                timestamp: row.created_at || '',
-                metadata: {
-                  status: row.status,
-                  authorFid: row.author_fid,
                 },
               });
             }
@@ -199,44 +170,12 @@ export async function GET(req: NextRequest) {
                 id: String(row.id),
                 title: row.title || 'Untitled Track',
                 snippet: snippet([row.artist, row.note].filter(Boolean).join(' - ')),
-                href: '/music',
+                href: '/chat',
                 timestamp: row.submitted_at || '',
                 metadata: {
                   artist: row.artist,
                   url: row.url,
                   status: row.status,
-                },
-              });
-            }
-          }
-        })(),
-      );
-    }
-
-    // ── Members (community profiles) ─────────────────────────────────────
-    if (type === 'all' || type === 'members') {
-      searches.push(
-        (async () => {
-          const { data } = await supabaseAdmin
-            .from('community_profiles')
-            .select('id, name, biography, category, pfp_url, username, created_at')
-            .textSearch('search_vector', query, { type: 'websearch' })
-            .order('created_at', { ascending: false })
-            .limit(limit);
-
-          if (data) {
-            for (const row of data) {
-              results.push({
-                type: 'member',
-                id: String(row.id),
-                title: row.name || row.username || 'Member',
-                snippet: snippet([row.category, row.biography].filter(Boolean).join(' - ')),
-                href: `/social/profile/${row.username || row.id}`,
-                timestamp: row.created_at || '',
-                metadata: {
-                  category: row.category,
-                  pfp: row.pfp_url,
-                  username: row.username,
                 },
               });
             }

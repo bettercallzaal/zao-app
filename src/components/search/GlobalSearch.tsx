@@ -9,10 +9,10 @@ import { useFocusTrap } from '@/hooks/useFocusTrap';
 // Types
 // ---------------------------------------------------------------------------
 
-type ContentType = 'all' | 'casts' | 'proposals' | 'music' | 'members';
+type ContentType = 'all' | 'casts' | 'music';
 
 interface SearchResult {
-  type: 'cast' | 'proposal' | 'music' | 'member';
+  type: 'cast' | 'music';
   id: string;
   title: string;
   snippet: string;
@@ -33,9 +33,7 @@ interface GlobalSearchProps {
 const TYPE_FILTERS: { value: ContentType; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'casts', label: 'Casts' },
-  { value: 'proposals', label: 'Proposals' },
   { value: 'music', label: 'Music' },
-  { value: 'members', label: 'Members' },
 ];
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -48,15 +46,6 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
       />
     </svg>
   ),
-  proposal: (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-      />
-    </svg>
-  ),
   music: (
     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
       <path
@@ -66,22 +55,11 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
       />
     </svg>
   ),
-  member: (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-      />
-    </svg>
-  ),
 };
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
   cast: 'bg-blue-500/20 text-blue-400',
-  proposal: 'bg-purple-500/20 text-purple-400',
   music: 'bg-green-500/20 text-green-400',
-  member: 'bg-[#f5a623]/20 text-[#f5a623]',
 };
 
 // ---------------------------------------------------------------------------
@@ -236,14 +214,12 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
   const typeLabels: Record<string, string> = {
     cast: 'Casts',
-    proposal: 'Proposals',
     music: 'Music',
-    member: 'Members',
   };
 
   // Flat ordered list for keyboard navigation (preserve grouping order)
   const flatResults: SearchResult[] = [];
-  for (const type of ['cast', 'proposal', 'music', 'member']) {
+  for (const type of ['cast', 'music']) {
     if (groupedResults[type]) {
       flatResults.push(...groupedResults[type]);
     }
@@ -340,7 +316,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             {/* Grouped results */}
             {!loading &&
               typeFilter === 'all' &&
-              (['cast', 'proposal', 'music', 'member'] as const).map((type) => {
+              (['cast', 'music'] as const).map((type) => {
                 const items = groupedResults[type];
                 if (!items || items.length === 0) return null;
                 return (
@@ -387,7 +363,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             {!loading && query.length < 2 && (
               <div className="px-4 py-10 text-center">
                 <p className="text-gray-400 text-sm mb-1">Search across all content</p>
-                <p className="text-gray-600 text-xs mb-4">Casts, proposals, music, and members</p>
+                <p className="text-gray-600 text-xs mb-4">Casts and music</p>
                 <div className="flex items-center justify-center gap-4 text-[10px] text-gray-600">
                   <span>
                     <kbd className="border border-white/[0.08] rounded px-1 py-0.5 mr-1">↑↓</kbd>{' '}

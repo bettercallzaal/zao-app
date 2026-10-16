@@ -80,7 +80,7 @@ export default function NotificationsPage() {
     <div className="min-h-[100dvh] bg-[#0a1628] pb-36 text-white">
       <PageHeader
         title="Notifications"
-        backHref="/home"
+        backHref="/chat"
         count={unreadCount > 0 ? unreadCount : undefined}
         rightAction={
           unreadCount > 0 ? (
