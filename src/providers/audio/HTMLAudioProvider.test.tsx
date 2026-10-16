@@ -65,9 +65,13 @@ const stableMockAudio = {
   removeAttribute: vi.fn(),
 };
 
+// `function`, not an arrow: the provider calls `new Audio()`, and vitest 4
+// rejects an arrow implementation under `new`.
 vi.stubGlobal(
   'Audio',
-  vi.fn(() => stableMockAudio),
+  vi.fn(function () {
+    return stableMockAudio;
+  }),
 );
 
 // ─── Mock getEqualizer ────────────────────────────────────────────────────────

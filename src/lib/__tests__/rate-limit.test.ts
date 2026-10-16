@@ -5,12 +5,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mockRedisLimit = vi.hoisted(() => vi.fn());
 const mockSlidingWindow = vi.hoisted(() => vi.fn(() => 'sliding-window-config'));
 
+// Constructor mocks use `function`, not an arrow: vitest 4 rejects an arrow
+// implementation under `new`. A function that returns an object still yields
+// that object when called with `new`, so the behaviour is unchanged.
 vi.mock('@upstash/redis', () => ({
-  Redis: vi.fn(() => ({})),
+  Redis: vi.fn(function () {
+    return {};
+  }),
 }));
 
 vi.mock('@upstash/ratelimit', () => {
-  const RatelimitMock = vi.fn(() => ({ limit: mockRedisLimit }));
+  const RatelimitMock = vi.fn(function () {
+    return { limit: mockRedisLimit };
+  });
   (RatelimitMock as unknown as { slidingWindow: typeof mockSlidingWindow }).slidingWindow =
     mockSlidingWindow;
   return { Ratelimit: RatelimitMock };
