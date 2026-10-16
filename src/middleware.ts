@@ -19,62 +19,25 @@ const RATE_LIMITS: [string, RateLimitConfig][] = [
   ['/api/chat/thread', { limit: 30, windowMs: MINUTE }],
   ['/api/chat/search', { limit: 30, windowMs: MINUTE }],
   ['/api/chat/schedule', { limit: 20, windowMs: MINUTE }],
-  ['/api/chat/assistant', { limit: 20, windowMs: MINUTE }],
-
-  // Fractals sub-routes
-  ['/api/fractals/webhook', { limit: 30, windowMs: MINUTE }],
-  ['/api/fractals', { limit: 20, windowMs: MINUTE }],
-
-  // Inbound webhooks (signed, but cap to blunt replay/DoS — see Alchemy hardening)
-  ['/api/webhooks', { limit: 100, windowMs: MINUTE }],
-  ['/api/juke/webhooks', { limit: 100, windowMs: MINUTE }],
 
   // Users sub-routes
   ['/api/users/follow', { limit: 15, windowMs: MINUTE }],
   ['/api/users', { limit: 20, windowMs: MINUTE }],
 
-  // Proposals sub-routes
-  ['/api/proposals/vote', { limit: 3, windowMs: MINUTE }],
-  ['/api/proposals/comment', { limit: 10, windowMs: MINUTE }],
-  ['/api/proposals', { limit: 5, windowMs: MINUTE }],
-
   // Music sub-routes
-  ['/api/music/generate', { limit: 5, windowMs: 60 * MINUTE }], // expensive paid AI inference
   ['/api/music/submissions', { limit: 2, windowMs: MINUTE }],
   ['/api/music/metadata', { limit: 20, windowMs: MINUTE }],
   ['/api/music/radio', { limit: 10, windowMs: MINUTE }],
 
-  // Library sub-routes
-  ['/api/library/submit', { limit: 3, windowMs: MINUTE }],
-  ['/api/library/vote', { limit: 15, windowMs: MINUTE }],
-  ['/api/library/comments', { limit: 10, windowMs: MINUTE }],
-  ['/api/library/delete', { limit: 10, windowMs: MINUTE }],
-  ['/api/library', { limit: 30, windowMs: MINUTE }],
-
   // Top-level routes (no sub-route ordering concerns)
-  ['/api/admin', { limit: 5, windowMs: MINUTE }],
   ['/api/auth', { limit: 10, windowMs: MINUTE }],
   ['/api/search', { limit: 30, windowMs: MINUTE }],
   ['/api/upload', { limit: 10, windowMs: MINUTE }],
-  ['/api/discord', { limit: 5, windowMs: MINUTE }],
-  ['/api/messages', { limit: 30, windowMs: MINUTE }],
   ['/api/notifications', { limit: 20, windowMs: MINUTE }],
-  ['/api/respect', { limit: 20, windowMs: MINUTE }],
-  ['/api/social', { limit: 20, windowMs: MINUTE }],
   ['/api/members', { limit: 10, windowMs: MINUTE }],
-  ['/api/following', { limit: 20, windowMs: MINUTE }],
   ['/api/miniapp', { limit: 10, windowMs: MINUTE }],
-  ['/api/wavewarz', { limit: 20, windowMs: MINUTE }],
-  ['/api/directory', { limit: 20, windowMs: MINUTE }],
-  ['/api/bluesky', { limit: 5, windowMs: MINUTE }],
-  ['/api/publish', { limit: 5, windowMs: MINUTE }],
   ['/api/platforms', { limit: 10, windowMs: MINUTE }],
   ['/api/neynar', { limit: 15, windowMs: MINUTE }],
-  ['/api/stream/webhook', { limit: 100, windowMs: MINUTE }],
-  ['/api/stream', { limit: 20, windowMs: MINUTE }],
-  ['/api/100ms', { limit: 20, windowMs: MINUTE }],
-  ['/api/livepeer', { limit: 10, windowMs: MINUTE }],
-  ['/api/broadcast', { limit: 15, windowMs: MINUTE }],
 ];
 
 function getRateLimitConfig(pathname: string): RateLimitConfig | null {
