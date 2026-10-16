@@ -45,10 +45,6 @@ const TutorialPanel = dynamic(
   () => import('./TutorialPanel').then((m) => ({ default: m.TutorialPanel })),
   { ssr: false },
 );
-const RespectPanel = dynamic(
-  () => import('./RespectPanel').then((m) => ({ default: m.RespectPanel })),
-  { ssr: false },
-);
 const EmpirePanel = dynamic(
   () => import('./EmpirePanel').then((m) => ({ default: m.EmpirePanel })),
   { ssr: false },
@@ -89,7 +85,6 @@ export function ChatRoom() {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
-  const [respectOpen, setRespectOpen] = useState(false);
   const [empireOpen, setEmpireOpen] = useState(false);
   const [profileFid, setProfileFid] = useState<number | null>(null);
   const [contentFilter, setContentFilter] = useState<ContentFilter>('all');
@@ -146,10 +141,6 @@ export function ChatRoom() {
           setProfileFid(null);
           return;
         }
-        if (respectOpen) {
-          setRespectOpen(false);
-          return;
-        }
         if (faqOpen) {
           setFaqOpen(false);
           return;
@@ -183,7 +174,6 @@ export function ChatRoom() {
     }),
     [
       profileFid,
-      respectOpen,
       faqOpen,
       tutorialOpen,
       searchOpen,
@@ -222,10 +212,6 @@ export function ChatRoom() {
         }}
         onOpenTutorial={() => {
           setTutorialOpen(true);
-          setSidebarOpen(false);
-        }}
-        onOpenRespect={() => {
-          setRespectOpen(true);
           setSidebarOpen(false);
         }}
         onOpenEmpire={() => {
@@ -559,7 +545,6 @@ export function ChatRoom() {
 
       {/* FAQ Panel */}
       <FaqPanel isOpen={faqOpen} onClose={() => setFaqOpen(false)} />
-      <RespectPanel isOpen={respectOpen} onClose={() => setRespectOpen(false)} />
       <EmpirePanel isOpen={empireOpen} onClose={() => setEmpireOpen(false)} />
 
       {/* Tutorial Panel */}
