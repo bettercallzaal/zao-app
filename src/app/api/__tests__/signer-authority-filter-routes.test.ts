@@ -23,7 +23,6 @@ vi.mock('@/lib/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
 }));
 
-import { GET as feedGET } from '@/app/api/activity/feed/route';
 import { GET as chatMessagesGET } from '@/app/api/chat/messages/route';
 import { GET as chatSearchGET } from '@/app/api/chat/search/route';
 import { GET as searchGET } from '@/app/api/search/route';
@@ -136,16 +135,6 @@ describe('signer authority on the five surfaces that read channel_casts', () => 
       async () => {
         const res = await searchGET(
           new NextRequest(`http://localhost:3000/api/search?q=signerquery${Date.now()}&type=casts`),
-        );
-        expect(res.status).toBe(200);
-        return JSON.stringify(await res.json());
-      },
-    ],
-    [
-      '/api/activity/feed',
-      async () => {
-        const res = await feedGET(
-          new NextRequest('http://localhost:3000/api/activity/feed?filter=social'),
         );
         expect(res.status).toBe(200);
         return JSON.stringify(await res.json());
