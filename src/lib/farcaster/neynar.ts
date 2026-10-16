@@ -20,22 +20,83 @@ function readHeaders() {
   return headers();
 }
 
-/** Fetch with failover: try READ_BASE first, fall back to NEYNAR_BASE on error */
-async function fetchWithFailover(path: string, init: RequestInit): Promise<Response> {
+/**
+ * Per-attempt budget for the read proxy. Short, so a slow proxy hands the
+ * request to Neynar instead of spending the whole request budget.
+ */
+const READ_ATTEMPT_TIMEOUT_MS = 5000;
+/** Per-attempt budget for Neynar (the same 10s every direct call uses). */
+const NEYNAR_ATTEMPT_TIMEOUT_MS = 10000;
+
+export interface FailoverOptions {
+  /**
+   * Shape check for a 200 from the read proxy. Returning false (or throwing)
+   * treats the response as a failure and falls back to Neynar.
+   */
+  validate?: (body: unknown) => boolean;
+}
+
+/**
+ * Signal for one provider attempt: its own timeout, plus the caller's
+ * cancellation when the caller passed a signal. A fresh timeout per attempt
+ * means the fallback never inherits an already-aborted signal.
+ */
+function attemptSignal(timeoutMs: number, caller?: AbortSignal): AbortSignal {
+  const timeout = AbortSignal.timeout(timeoutMs);
+  return caller ? AbortSignal.any([timeout, caller]) : timeout;
+}
+
+async function passesShapeCheck(res: Response, validate?: FailoverOptions['validate']) {
+  if (!validate) return true;
+  try {
+    return validate(await res.clone().json());
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Fetch with failover: try READ_BASE first, fall back to NEYNAR_BASE on a
+ * network error, timeout, non-OK status, or failed shape check. Each attempt
+ * gets its own timeout. A caller `init.signal` is cancellation only: if the
+ * caller aborts, the request is not retried. Without READ_BASE this is one
+ * Neynar request.
+ */
+export async function fetchWithFailover(
+  path: string,
+  init: RequestInit,
+  options: FailoverOptions = {},
+): Promise<Response> {
+  const caller = init.signal ?? undefined;
   if (READ_BASE === NEYNAR_BASE) {
-    return fetch(`${NEYNAR_BASE}${path}`, init);
+    return fetch(`${NEYNAR_BASE}${path}`, {
+      ...init,
+      signal: attemptSignal(NEYNAR_ATTEMPT_TIMEOUT_MS, caller),
+    });
   }
   try {
-    const res = await fetch(`${READ_BASE}${path}`, init);
-    if (res.ok) return res;
-    // Non-OK from proxy — fall back to Neynar
+    const res = await fetch(`${READ_BASE}${path}`, {
+      ...init,
+      signal: attemptSignal(READ_ATTEMPT_TIMEOUT_MS, caller),
+    });
+    if (res.ok && (await passesShapeCheck(res, options.validate))) return res;
+    // Non-OK, or a 200 with the wrong shape: fall back to Neynar
   } catch {
-    // Network error from proxy — fall back to Neynar
+    // Network error or timeout from proxy: fall back to Neynar
   }
+  if (caller?.aborted) throw caller.reason;
   return fetch(`${NEYNAR_BASE}${path}`, {
     ...init,
     headers: headers(),
+    signal: attemptSignal(NEYNAR_ATTEMPT_TIMEOUT_MS, caller),
   });
+}
+
+/** A feed read must carry a `casts` array; a 200 without one is a placeholder. */
+function hasCasts(body: unknown): boolean {
+  return (
+    typeof body === 'object' && body !== null && Array.isArray((body as { casts?: unknown }).casts)
+  );
 }
 
 export async function getTrendingFeed(limit = 25, timeWindow = '24h', cursor?: string) {
@@ -48,8 +109,7 @@ export async function getTrendingFeed(limit = 25, timeWindow = '24h', cursor?: s
   const res = await fetchWithFailover(`/feed/trending?${params}`, {
     headers: readHeaders(),
     next: { revalidate: 0 },
-    signal: AbortSignal.timeout(10000),
-  });
+  }, { validate: hasCasts });
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Neynar trending feed error ${res.status}: ${body.slice(0, 200)}`);
@@ -68,8 +128,7 @@ export async function getChannelFeed(channelId: string, cursor?: string, limit =
   const res = await fetchWithFailover(`/feed/channels?${params}`, {
     headers: readHeaders(),
     next: { revalidate: 0 },
-    signal: AbortSignal.timeout(10000),
-  });
+  }, { validate: hasCasts });
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Neynar feed error ${res.status}: ${body.slice(0, 200)}`);
@@ -95,8 +154,7 @@ export async function getFollowingFeed(fid: number, cursor?: string, limit = 25)
   const res = await fetchWithFailover(`/feed/following?${params}`, {
     headers: readHeaders(),
     next: { revalidate: 0 },
-    signal: AbortSignal.timeout(10000),
-  });
+  }, { validate: hasCasts });
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Neynar following feed error ${res.status}: ${body.slice(0, 200)}`);
@@ -161,7 +219,6 @@ export async function getCastThread(hash: string) {
   const res = await fetchWithFailover(`/cast/conversation?${params}`, {
     headers: readHeaders(),
     next: { revalidate: 0 },
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -175,7 +232,6 @@ export async function getUserByFid(fid: number, viewerFid?: number) {
   if (viewerFid) params.set('viewer_fid', String(viewerFid));
   const res = await fetchWithFailover(`/user/bulk?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -215,7 +271,6 @@ export async function getUsersByFids(fids: number[]) {
   const params = new URLSearchParams({ fids: fids.join(',') });
   const res = await fetchWithFailover(`/user/bulk?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -230,7 +285,6 @@ export async function getUserCasts(fid: number, limit = 100) {
   const params = new URLSearchParams({ fid: String(fid), limit: String(limit) });
   const res = await fetchWithFailover(`/feed/user/casts?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -243,7 +297,6 @@ export async function getUserCasts(fid: number, limit = 100) {
 export async function getUserByAddress(address: string) {
   const res = await fetchWithFailover(`/user/bulk-by-address?addresses=${address}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -301,7 +354,6 @@ export async function searchUsers(query: string, limit = 5) {
   });
   const res = await fetchWithFailover(`/user/search?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Neynar search error: ${res.status}`);
   return res.json();
@@ -325,7 +377,6 @@ export async function getFollowers(
   const res = await fetchWithFailover(`/followers?${params}`, {
     headers: readHeaders(),
     next: { revalidate: 0 },
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Neynar followers error: ${res.status}`);
   return res.json();
@@ -349,7 +400,6 @@ export async function getFollowing(
   const res = await fetchWithFailover(`/following?${params}`, {
     headers: readHeaders(),
     next: { revalidate: 0 },
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Neynar following error: ${res.status}`);
   return res.json();
@@ -362,7 +412,6 @@ export async function getRelevantFollowers(targetFid: number, viewerFid: number)
   });
   const res = await fetchWithFailover(`/followers/relevant?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Neynar relevant followers error: ${res.status}`);
   return res.json();
@@ -427,7 +476,6 @@ export async function getNotifications(fid: number, cursor?: string, limit = 25)
   if (cursor) params.set('cursor', cursor);
   const res = await fetchWithFailover(`/notifications?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -512,7 +560,6 @@ export async function getStorageUsage(fid: number) {
   const params = new URLSearchParams({ fid: String(fid) });
   const res = await fetchWithFailover(`/storage/usage?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -536,7 +583,6 @@ export async function getCastConversationSummary(castHash: string) {
   const params = new URLSearchParams({ identifier: castHash, type: 'hash' });
   const res = await fetchWithFailover(`/cast/conversation/summary?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -548,7 +594,6 @@ export async function getCastConversationSummary(castHash: string) {
 export async function getPopularCasts(fid: number) {
   const res = await fetchWithFailover(`/feed/user/popular?fid=${fid}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Neynar popular casts error: ${res.status}`);
   return res.json();
@@ -558,7 +603,6 @@ export async function getBestFriends(fid: number, limit = 10) {
   const params = new URLSearchParams({ fid: String(fid), limit: String(limit) });
   const res = await fetchWithFailover(`/user/best-friends?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Neynar best friends error: ${res.status}`);
   return res.json();
@@ -568,7 +612,6 @@ export async function getTrendingTopics(limit = 10) {
   const params = new URLSearchParams({ limit: String(limit) });
   const res = await fetchWithFailover(`/trending/topics?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Neynar trending topics error: ${res.status}`);
   return res.json();
@@ -586,7 +629,6 @@ export async function getFollowSuggestions(fid: number, limit = 20) {
   const params = new URLSearchParams({ fid: String(fid), limit: String(limit) });
   const res = await fetchWithFailover(`/user/suggestions?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Neynar follow suggestions error: ${res.status}`);
   return res.json();
@@ -597,7 +639,6 @@ export async function getFrameCatalog(limit = 20, cursor?: string) {
   if (cursor) params.set('cursor', cursor);
   const res = await fetchWithFailover(`/frame/catalog?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Neynar frame catalog error: ${res.status}`);
   return res.json();
@@ -607,7 +648,6 @@ export async function searchFrames(query: string, limit = 20) {
   const params = new URLSearchParams({ q: query, limit: String(limit) });
   const res = await fetchWithFailover(`/frame/search?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Neynar frame search error: ${res.status}`);
   return res.json();
@@ -617,7 +657,6 @@ export async function getRelevantFrames(fid: number, limit = 20) {
   const params = new URLSearchParams({ fid: String(fid), limit: String(limit) });
   const res = await fetchWithFailover(`/frame/relevant?${params}`, {
     headers: readHeaders(),
-    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Neynar relevant frames error: ${res.status}`);
   return res.json();
