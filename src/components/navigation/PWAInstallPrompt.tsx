@@ -110,7 +110,7 @@ export default function PWAInstallPrompt() {
 
           {/* Text */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white leading-snug">Install ZAO OS</p>
+            <p className="text-sm font-semibold text-white leading-snug">Install The ZAO app</p>
             <p className="text-xs text-gray-400 mt-0.5 leading-snug">
               {isIOS
                 ? 'Tap the Share button, then "Add to Home Screen"'

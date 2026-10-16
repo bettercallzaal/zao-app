@@ -1,7 +1,7 @@
 {
-  "name": "ZAO OS",
-  "short_name": "ZAO OS",
-  "description": "Where music artists build onchain",
+  "name": "The ZAO app",
+  "short_name": "The ZAO",
+  "description": "The ZAO's feed and song player, built on Farcaster.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

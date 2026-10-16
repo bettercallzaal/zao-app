@@ -139,7 +139,7 @@ export default function MiniAppPage() {
           <div className="bg-[#0d1b2a] rounded-xl p-6 border border-white/[0.08] mb-6">
             <p className="text-white text-sm mb-2">Something went wrong.</p>
             <p className="text-gray-400 text-sm">
-              Try opening ZAO OS in your browser, or add it to your mini app list first.
+              Try opening The ZAO app in your browser, or add it to your mini app list first.
             </p>
           </div>
 
@@ -173,7 +173,7 @@ export default function MiniAppPage() {
         <div className="bg-[#0d1b2a] rounded-xl p-6 border border-white/[0.08] mb-6">
           <p className="text-white text-sm mb-1">Hey {username || 'there'}!</p>
           <p className="text-gray-400 text-sm">
-            ZAO OS is currently invite-only. Post in <span className="text-white">#zao</span> and
+            The ZAO app is currently invite-only. Post in <span className="text-white">#zao</span> and
             tag <span className="text-[#f5a623]">@zaal</span> to request access.
           </p>
         </div>

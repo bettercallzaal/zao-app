@@ -1,17 +1,17 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Join ZAO OS',
+  title: 'Join The ZAO app',
   description:
-    'Check your wallet eligibility and join ZAO OS — the gated Farcaster community for music artists building onchain.',
+    "Join The ZAO app: The ZAO's feed and song player, built on Farcaster.",
   openGraph: {
-    title: 'Join ZAO OS',
+    title: 'Join The ZAO app',
     description: 'Check your wallet eligibility and join the ZAO community.',
     url: 'https://zaoos.com/onboard',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Join ZAO OS',
+    title: 'Join The ZAO app',
     description: 'Check your wallet eligibility and join the ZAO community.',
   },
 };

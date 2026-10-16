@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { RequestAccessButton } from './RequestAccessButton';
 
 export const metadata: Metadata = {
-  title: 'Access Restricted — ZAO OS',
+  title: 'Access restricted',
   description:
-    'ZAO OS is currently invite-only for ZAO community members. Request access to join the decentralized music community.',
+    'The ZAO app is currently invite-only for ZAO community members. Request access to join the decentralized music community.',
   robots: { index: false, follow: false },
 };
 
@@ -40,7 +40,7 @@ export default function NotAllowedPage() {
 
         <h1 className="text-2xl font-bold text-white mb-2">Not on the list yet</h1>
         <p className="text-gray-400 text-sm mb-8">
-          ZAO OS is currently invite-only for ZAO community members.
+          The ZAO app is currently invite-only for ZAO community members.
         </p>
 
         <RequestAccessButton />

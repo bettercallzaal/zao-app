@@ -4,11 +4,11 @@ const miniAppEmbed = JSON.stringify({
   version: '1',
   imageUrl: 'https://zaoos.com/og',
   button: {
-    title: 'Open ZAO OS',
+    title: 'Open The ZAO app',
     action: {
       type: 'launch_miniapp',
       url: 'https://zaoos.com/miniapp',
-      name: 'ZAO OS',
+      name: 'The ZAO app',
       splashImageUrl: 'https://zaoos.com/splash.png',
       splashBackgroundColor: '#0a1628',
     },
@@ -16,7 +16,7 @@ const miniAppEmbed = JSON.stringify({
 });
 
 export const metadata: Metadata = {
-  title: 'ZAO OS Mini App',
+  title: 'The ZAO app',
   description: 'The ZAO Community on Farcaster — gated music community mini app',
   other: {
     'fc:miniapp': miniAppEmbed,

@@ -18,11 +18,11 @@ const miniAppEmbed = JSON.stringify({
   version: '1',
   imageUrl: 'https://zaoos.com/og',
   button: {
-    title: 'Open ZAO OS',
+    title: 'Open The ZAO app',
     action: {
       type: 'launch_miniapp',
       url: 'https://zaoos.com/miniapp',
-      name: 'ZAO OS',
+      name: 'The ZAO app',
       splashImageUrl: 'https://zaoos.com/splash.png',
       splashBackgroundColor: '#0a1628',
     },
@@ -30,41 +30,37 @@ const miniAppEmbed = JSON.stringify({
 });
 
 const SITE_DESCRIPTION =
-  'The ZAO on Farcaster — a decentralized music community on Base with channel chat, shared listening, on-chain governance, reputation, and ZABAL tokens.';
+  "The ZAO app: The ZAO's feed and song player, built on Farcaster. The ZAO is a decentralized impact network that returns profit margin, data and IP rights to artists, starting with music.";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://zaoos.com'),
-  title: { default: 'ZAO OS', template: '%s · ZAO OS' },
+  title: { default: 'The ZAO app', template: '%s · The ZAO app' },
   description: SITE_DESCRIPTION,
-  applicationName: 'ZAO OS',
+  applicationName: 'The ZAO app',
   authors: [{ name: 'The ZAO', url: 'https://thezao.xyz' }],
   creator: 'The ZAO',
   publisher: 'The ZAO',
   category: 'social',
   keywords: [
     'The ZAO',
-    'ZAO OS',
+    'The ZAO app',
     'Farcaster',
-    'Base chain',
-    'decentralized music',
-    'music community',
-    'music DAO',
-    'ZABAL token',
-    'onchain governance',
     'Farcaster mini app',
-    'Web3 community',
+    'music',
+    'artists',
+    'decentralized impact network',
   ],
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'ZAO OS',
+    title: 'The ZAO app',
     description: SITE_DESCRIPTION,
     url: 'https://zaoos.com',
-    siteName: 'ZAO OS',
+    siteName: 'The ZAO app',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ZAO OS',
+    title: 'The ZAO app',
     description: SITE_DESCRIPTION,
   },
   other: {
