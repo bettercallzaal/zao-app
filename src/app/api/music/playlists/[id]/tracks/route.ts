@@ -11,7 +11,7 @@ import { addToPlaylist } from '@/lib/music/library';
 const addSchema = z.object({ songId: z.string().uuid() });
 
 /**
- * POST /api/music/playlists/[id]/tracks — add a song to a playlist
+ * POST /api/music/playlists/[id]/tracks - add a song to a playlist
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSessionData();
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 const removeSchema = z.object({ songId: z.string().uuid() });
 
 /**
- * DELETE /api/music/playlists/[id]/tracks — remove a song from a playlist
+ * DELETE /api/music/playlists/[id]/tracks - remove a song from a playlist
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSessionData();

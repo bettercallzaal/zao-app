@@ -37,7 +37,7 @@ beforeEach(() => {
   mockGetSessionData.mockResolvedValue({ fid: 100 });
 });
 
-describe('DELETE /api/music/playlists/[id]/tracks — ownership (IDOR)', () => {
+describe('DELETE /api/music/playlists/[id]/tracks - ownership (IDOR)', () => {
   it('rejects unauthenticated with 401', async () => {
     mockGetSessionData.mockResolvedValue(null);
     const res = await DELETE(delReq(), ctx);
