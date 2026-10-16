@@ -84,14 +84,49 @@ describe('scripts/vercel-ignore.sh', { timeout: 30_000 }, () => {
     expect(r.log).toContain('-> BUILD');
   });
 
-  it('falls back to the parent commit when the previous deploy SHA is unknown', () => {
+  it.each([
+    ['unset', undefined],
+    ['unreachable', 'f'.repeat(40)],
+  ])('production, previous deploy SHA %s -> BUILD even for a docs-only HEAD', (_l, prev) => {
     const { cwd } = repoWithChange(['README.md']);
-    const r = decide(cwd, {
-      VERCEL_ENV: 'production',
-      VERCEL_GIT_PREVIOUS_SHA: 'f'.repeat(40),
-    });
-    expect(r.code, r.log).toBe(0);
-    expect(r.log).toContain('vs HEAD^');
+    const env: Record<string, string> = { VERCEL_ENV: 'production' };
+    if (prev) env.VERCEL_GIT_PREVIOUS_SHA = prev;
+    const r = decide(cwd, env);
+    expect(r.code, r.log).toBe(1);
+    expect(r.log).toContain('previous deploy not reachable');
+  });
+
+  it('production: a code change two commits back, then a docs commit -> BUILD', () => {
+    const { cwd, base } = repoWithChange(['src/lib/feature.ts']);
+    write(cwd, 'README.md', '# docs after the code change\n');
+    git(cwd, 'add', '-A');
+    git(cwd, 'commit', '-qm', 'docs');
+    const r = decide(cwd, { VERCEL_ENV: 'production', VERCEL_GIT_PREVIOUS_SHA: base });
+    expect(r.code, r.log).toBe(1);
+  });
+
+  it('production: a source file moved out to docs -> BUILD (rename seen as delete)', () => {
+    const { cwd } = repoWithChange(['README.md']);
+    const before = git(cwd, 'rev-parse', 'HEAD');
+    git(cwd, 'mv', 'src/app/page.tsx', 'docs-page.tsx');
+    git(cwd, 'commit', '-qm', 'move');
+    const r = decide(cwd, { VERCEL_ENV: 'production', VERCEL_GIT_PREVIOUS_SHA: before });
+    expect(r.code, r.log).toBe(1);
+  });
+
+  it('production: a test file renamed to source -> BUILD', () => {
+    const { cwd } = repoWithChange(['src/lib/thing.test.ts']);
+    const before = git(cwd, 'rev-parse', 'HEAD');
+    git(cwd, 'mv', 'src/lib/thing.test.ts', 'src/lib/thing.ts');
+    git(cwd, 'commit', '-qm', 'promote');
+    const r = decide(cwd, { VERCEL_ENV: 'production', VERCEL_GIT_PREVIOUS_SHA: before });
+    expect(r.code, r.log).toBe(1);
+  });
+
+  it('production: a markdown file under public/ -> BUILD (public ships as-is)', () => {
+    const { cwd, base } = repoWithChange(['public/llms.txt', 'public/notes.md']);
+    const r = decide(cwd, { VERCEL_ENV: 'production', VERCEL_GIT_PREVIOUS_SHA: base });
+    expect(r.code, r.log).toBe(1);
   });
 
   it('builds (safe default) when no diff base exists at all', () => {
