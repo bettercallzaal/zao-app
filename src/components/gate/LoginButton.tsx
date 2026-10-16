@@ -32,11 +32,11 @@ export function LoginButton() {
       setTimeout(async () => {
         try {
           const res = await fetch('/api/auth/session');
-          if (res.ok) {
-            const data = await res.json();
-            if (data.fid) {
-              router.push('/chat');
-            }
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.fid) {
+            router.push('/chat');
+          } else if (data.visitor) {
+            router.push('/feed');
           }
         } catch {
           // ignore - not authenticated yet

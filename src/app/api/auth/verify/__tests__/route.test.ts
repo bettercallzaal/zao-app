@@ -10,12 +10,16 @@ const { mockVerifySignInMessage, mockSaveSession, mockGetUserByFid, mockCheckAll
     mockCheckAllowlist: vi.fn(),
     mockFrom: vi.fn(),
   }));
+const mockSaveVisitorSession = vi.hoisted(() => vi.fn());
 
 vi.mock('@farcaster/auth-client', () => ({
   createAppClient: () => ({ verifySignInMessage: mockVerifySignInMessage }),
   viemConnector: vi.fn(),
 }));
-vi.mock('@/lib/auth/session', () => ({ saveSession: mockSaveSession }));
+vi.mock('@/lib/auth/session', () => ({
+  saveSession: mockSaveSession,
+  saveVisitorSession: mockSaveVisitorSession,
+}));
 vi.mock('@/lib/db/supabase', () => ({ supabaseAdmin: { from: mockFrom } }));
 vi.mock('@/lib/farcaster/neynar', () => ({ getUserByFid: mockGetUserByFid }));
 vi.mock('@/lib/gates/allowlist', () => ({ checkAllowlist: mockCheckAllowlist }));
@@ -93,5 +97,67 @@ describe('POST /api/auth/verify - membership answers', () => {
       .mockRejectedValue(new Error('allowlist lookup failed: custodyMatch'));
     const res = await POST(makePostRequest('/api/auth/verify', BODY));
     expect(res.status).toBe(502);
+  });
+});
+
+describe('POST /api/auth/verify - open front door (FARCASTER_OPEN_FRONT_DOOR)', () => {
+  beforeEach(() => {
+    mockSaveVisitorSession.mockResolvedValue(undefined);
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  it.each([
+    '',
+    '0',
+    'true',
+  ])('flag %j: a non-member still gets 403 and no session', async (flag) => {
+    vi.stubEnv('FARCASTER_OPEN_FRONT_DOOR', flag);
+    mockCheckAllowlist.mockResolvedValue({ allowed: false });
+    const res = await POST(makePostRequest('/api/auth/verify', BODY));
+    expect(res.status).toBe(403);
+    expect(mockSaveVisitorSession).not.toHaveBeenCalled();
+    expect(mockSaveSession).not.toHaveBeenCalled();
+  });
+
+  it('flag on: a non-member gets a visitor session, never a member one, and goes to /feed', async () => {
+    vi.stubEnv('FARCASTER_OPEN_FRONT_DOOR', '1');
+    mockCheckAllowlist.mockResolvedValue({ allowed: false });
+    const res = await POST(makePostRequest('/api/auth/verify', BODY));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ success: true, role: 'visitor', redirect: '/feed' });
+    expect(mockSaveVisitorSession).toHaveBeenCalledWith({
+      fid: 42,
+      username: 'u',
+      displayName: 'U',
+      pfpUrl: 'p',
+    });
+    expect(mockSaveSession).not.toHaveBeenCalled();
+  });
+
+  it('flag on: a FAILED FID lookup is a 502, never a downgrade to visitor', async () => {
+    vi.stubEnv('FARCASTER_OPEN_FRONT_DOOR', '1');
+    mockCheckAllowlist
+      .mockRejectedValueOnce(new Error('allowlist lookup failed: fidMatch'))
+      .mockResolvedValue({ allowed: false });
+    const res = await POST(makePostRequest('/api/auth/verify', BODY));
+    expect(res.status).toBe(502);
+    expect(mockSaveVisitorSession).not.toHaveBeenCalled();
+  });
+
+  it('flag on: a member still gets a member session, not a visitor one', async () => {
+    vi.stubEnv('FARCASTER_OPEN_FRONT_DOOR', '1');
+    mockCheckAllowlist.mockResolvedValue({ allowed: true });
+    const res = await POST(makePostRequest('/api/auth/verify', BODY));
+    expect(res.status).toBe(200);
+    expect(mockSaveSession).toHaveBeenCalled();
+    expect(mockSaveVisitorSession).not.toHaveBeenCalled();
+  });
+
+  it('flag on: returns 500 when the visitor session cannot be saved', async () => {
+    vi.stubEnv('FARCASTER_OPEN_FRONT_DOOR', '1');
+    mockCheckAllowlist.mockResolvedValue({ allowed: false });
+    mockSaveVisitorSession.mockRejectedValue(new Error('cookie store down'));
+    const res = await POST(makePostRequest('/api/auth/verify', BODY));
+    expect(res.status).toBe(500);
   });
 });
