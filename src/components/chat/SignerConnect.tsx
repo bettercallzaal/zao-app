@@ -161,7 +161,7 @@ export function SignerConnect({ onSuccess, compact = false }: SignerConnectProps
           <div className="text-center">
             <p className="font-semibold text-white">Approve Posting on Farcaster</p>
             <p className="text-xs text-gray-400 mt-0.5">
-              Scan with your phone camera or click below to open Warpcast and authorize this signer.
+              Scan with your phone camera or click below to open the Farcaster app and authorize this signer.
             </p>
           </div>
 
@@ -182,7 +182,7 @@ export function SignerConnect({ onSuccess, compact = false }: SignerConnectProps
               rel="noopener noreferrer"
               className="flex-1 text-center px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition-colors shadow"
             >
-              Open Warpcast App
+              Open the Farcaster app
             </a>
             <button
               type="button"
@@ -195,7 +195,7 @@ export function SignerConnect({ onSuccess, compact = false }: SignerConnectProps
 
           <div className="flex items-center gap-2 text-[11px] text-purple-300">
             <div className="w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-            <span>Waiting for approval in Warpcast...</span>
+            <span>Waiting for approval in the Farcaster app...</span>
           </div>
         </div>
       )}

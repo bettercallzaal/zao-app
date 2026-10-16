@@ -38,7 +38,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Is this also a Farcaster Mini App?',
-    a: 'Yes! ZAO OS works as a standalone web app and as a Farcaster Mini App inside Warpcast. The experience is the same either way.',
+    a: 'Yes! The ZAO app works as a standalone web app and as a mini app inside the Farcaster app. The experience is the same either way.',
   },
 ];
 

@@ -46,7 +46,7 @@ describe('SignerConnect', () => {
       expect(screen.getByText(/Approve Posting on Farcaster/i)).toBeInTheDocument();
     });
 
-    const warpcastLink = screen.getByRole('link', { name: /Open Warpcast App/i });
+    const warpcastLink = screen.getByRole('link', { name: /Open the Farcaster app/i });
     expect(warpcastLink).toHaveAttribute('href', mockApprovalUrl);
     expect(screen.getByRole('button', { name: /Cancel/i })).toBeInTheDocument();
   });

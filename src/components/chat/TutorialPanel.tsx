@@ -42,7 +42,7 @@ const TUTORIAL_STEPS = [
       </svg>
     ),
     description:
-      'To post messages, you need to connect a Farcaster signer. Look for the purple "Connect to post" banner above the compose bar. This lets ZAO OS post on your behalf.',
+      'To post messages, you need to connect a Farcaster signer. Look for the purple "Connect to post" banner above the compose bar. This lets The ZAO app post on your behalf.',
   },
   {
     title: 'Browse Channels',

@@ -290,7 +290,7 @@ export const communityConfig = {
     /** Allowed image MIME types for upload */
     allowedImageTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
   },
-  // ── ZAO OS Settings ────────────────────────────────────────────
+  // ── The ZAO app settings ────────────────────────────────────────────
   /** Operating system shell and app defaults */
   os: {
     /** Default shell for new users: 'phone' | 'desktop' | 'dashboard' | 'feed' */

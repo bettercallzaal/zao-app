@@ -1,5 +1,5 @@
 /**
- * Text analysis utilities for ZAO OS.
+ * Text analysis utilities for The ZAO app.
  *
  * Ported from ZAOVideoEditor's Python NLP pipeline. All algorithms are pure
  * TypeScript with zero external dependencies — works in both Node.js and the

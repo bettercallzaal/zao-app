@@ -1,4 +1,4 @@
-// ZAO OS Service Worker — offline support + caching
+// The ZAO app service worker: offline support and caching
 const CACHE_NAME = 'zaoos-v2';
 const OFFLINE_URL = '/offline';
 

@@ -1,5 +1,5 @@
 /**
- * Audio filter presets for ZAO OS music player.
+ * Audio filter presets for The ZAO app's music player.
  *
  * Two categories:
  * 1. Speed/pitch filters — use playbackRate, work with ALL audio sources
