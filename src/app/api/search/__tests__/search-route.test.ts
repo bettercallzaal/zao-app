@@ -42,32 +42,18 @@ describe('GET /api/search', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns member results for type=members', async () => {
-    mockFrom.mockReturnValue(
-      profilesChain([
-        {
-          id: 7,
-          name: 'Alice',
-          biography: 'singer',
-          category: 'artist',
-          username: 'alice',
-          created_at: '2026-01-01',
-        },
-      ]),
-    );
-    const res = await GET(req('q=uniquequery3&type=members'));
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    const member = (body.results as Array<{ type: string; title: string }>).find(
-      (r) => r.type === 'member',
-    );
-    expect(member?.title).toBe('Alice');
-    expect(mockFrom).toHaveBeenCalledWith('community_profiles');
+  it.each([
+    'members',
+    'proposals',
+  ])('400 for type=%s: this app has no page for those results', async (type) => {
+    const res = await GET(req(`q=gone-${type}&type=${type}`));
+    expect(res.status).toBe(400);
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 
   it('returns empty results gracefully when a search source has no data', async () => {
     mockFrom.mockReturnValue(profilesChain([]));
-    const res = await GET(req('q=emptyquery4&type=members'));
+    const res = await GET(req('q=emptyquery4&type=music'));
     expect(res.status).toBe(200);
     expect(Array.isArray((await res.json()).results)).toBe(true);
   });
