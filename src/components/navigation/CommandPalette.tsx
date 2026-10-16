@@ -57,8 +57,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const handleSelect = useCallback(
     (command: string) => {
       const allCommands = [
-        ...COMMAND_GROUPS.fleet.commands,
-        ...COMMAND_GROUPS.operations.commands,
         ...COMMAND_GROUPS.navigation.commands,
         ...COMMAND_GROUPS.actions.commands,
       ];
