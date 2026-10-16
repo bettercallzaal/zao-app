@@ -1,7 +1,7 @@
 /**
- * ZAO OS Mini App Landing Page
+ * The ZAO app: mini app landing page
  *
- * This is the dedicated entry point for the ZAO OS mini app within the
+ * This is the dedicated entry point for The ZAO app's mini app within the
  * Farcaster client. It is NOT wrapped in MiniAppGate so it renders
  * without authentication — allowing the mini app to display immediately
  * and dismiss the native splash screen via sdk.actions.ready().

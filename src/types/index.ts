@@ -46,7 +46,7 @@ export interface QuotedCastData {
   text: string;
   timestamp: string;
   embeds?: { url?: string }[];
-  /** Origin of the cast inside ZAO OS — used to credit external curators on outgoing quote-casts. */
+  /** Origin of the cast inside The ZAO app — used to credit external curators on outgoing quote-casts. */
   _source?: 'sopha' | 'neynar';
   /** Curator attribution carried from the source feed. */
   _curators?: {

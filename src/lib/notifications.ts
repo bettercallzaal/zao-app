@@ -11,7 +11,7 @@ type NotificationType = 'message' | 'proposal' | 'vote' | 'comment' | 'member' |
 
 /**
  * Create in-app notifications for one or more recipients.
- * These show up in the notification bell feed inside ZAO OS.
+ * These show up in the notification bell feed inside The ZAO app.
  */
 export async function createInAppNotification(opts: {
   recipientFids: number[];
