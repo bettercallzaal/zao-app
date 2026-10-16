@@ -95,26 +95,6 @@ const TUTORIAL_STEPS = [
       'Like, recast, reply, or quote any message. Click the speech bubble to open the thread drawer and see the full conversation.',
   },
   {
-    title: 'Private Messages',
-    icon: (
-      <svg
-        className="w-8 h-8"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-        />
-      </svg>
-    ),
-    description:
-      'Click "Private DMs & Groups" in the sidebar for encrypted messaging. DM other members or create private group chats — completely separate from the public channels.',
-  },
-  {
     title: 'Keyboard Shortcuts',
     icon: (
       <svg

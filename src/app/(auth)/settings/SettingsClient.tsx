@@ -101,17 +101,6 @@ interface MessagingPrefs {
 
 const PREFS_DEFAULTS: MessagingPrefs = { autoJoinGroup: true, allowNonZaoDms: false };
 
-interface RespectData {
-  member: {
-    total_respect: number;
-    fractal_respect: number;
-    onchain_og: number;
-    onchain_zor: number;
-    fractal_count: number;
-    first_respect_at: string | null;
-  } | null;
-}
-
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -411,9 +400,6 @@ export function SettingsClient({ session, profile }: SettingsClientProps) {
   const [zaoSaving, setZaoSaving] = useState(false);
   const [zaoSaved, setZaoSaved] = useState(false);
 
-  // Respect token data
-  const [respect, setRespect] = useState<RespectData>({ member: null });
-  const [respectLoading, setRespectLoading] = useState(true);
 
   // Farcaster storage data
   interface StorageUsage {
@@ -456,16 +442,6 @@ export function SettingsClient({ session, profile }: SettingsClientProps) {
       .then((data) => setHiddenWallets(data.hidden_wallets ?? []))
       .catch(() => {})
       .finally(() => setWalletVisLoading(false));
-  }, [session?.fid]);
-
-  // Fetch respect data
-  useEffect(() => {
-    if (!session?.fid) return;
-    fetch(`/api/respect/member?fid=${session.fid}`)
-      .then((r) => (r.ok ? r.json() : { member: null }))
-      .then((data) => setRespect(data))
-      .catch(() => {})
-      .finally(() => setRespectLoading(false));
   }, [session?.fid]);
 
   // Fetch Farcaster storage
@@ -1002,86 +978,6 @@ export function SettingsClient({ session, profile }: SettingsClientProps) {
                   </p>
                 </div>
               </>
-            )}
-          </div>
-        </section>
-
-        {/* ── Respect Tokens ──────────────────────────────────────── */}
-        <section>
-          <p className="text-xs text-gray-500 uppercase tracking-wider px-1 mb-3">Respect Tokens</p>
-          <div className="bg-[#0d1b2a] rounded-xl p-5 border border-white/[0.08]">
-            {respectLoading ? (
-              <div className="flex items-center justify-center py-4">
-                <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : respect.member ? (
-              <>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-[#0a1628] rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-[#f5a623]">
-                      {respect.member.total_respect}
-                    </p>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-1">
-                      Total Respect
-                    </p>
-                  </div>
-                  <div className="bg-[#0a1628] rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-purple-400">
-                      {respect.member.fractal_count}
-                    </p>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-1">
-                      Fractals Attended
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">Fractal Respect</span>
-                    <span className="text-sm text-white font-mono">
-                      {respect.member.fractal_respect}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">On-chain OG Respect</span>
-                    <span className="text-sm text-white font-mono">
-                      {respect.member.onchain_og}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">On-chain ZOR</span>
-                    <span className="text-sm text-white font-mono">
-                      {respect.member.onchain_zor}
-                    </span>
-                  </div>
-                </div>
-                {respect.member.first_respect_at && (
-                  <div className="mt-3 pt-3 border-t border-white/[0.08]">
-                    <p className="text-[10px] text-gray-600">
-                      First respect earned{' '}
-                      {new Date(respect.member.first_respect_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                )}
-                <div className="mt-3 pt-3 border-t border-white/[0.08]">
-                  <Link
-                    href="/respect"
-                    className="text-xs text-[#f5a623]/60 hover:text-[#f5a623] transition-colors"
-                  >
-                    View full leaderboard
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-gray-500">No respect tokens yet</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  Earn respect by attending Fractal sessions
-                </p>
-              </div>
             )}
           </div>
         </section>

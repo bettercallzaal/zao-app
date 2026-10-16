@@ -29,14 +29,6 @@ const FAQ_ITEMS = [
     a: 'Share a link to Spotify, SoundCloud, YouTube, or other music platforms in chat. The player will automatically detect the music and let you play it inline. Click the music note icon to open the queue sidebar.',
   },
   {
-    q: 'What are Private DMs & Groups?',
-    a: 'End-to-end encrypted messaging powered by XMTP. You can send private DMs to other ZAO members or create group chats. This is completely separate from the public Farcaster channels.',
-  },
-  {
-    q: 'What is Respect?',
-    a: "Respect is the community's reputation system. You earn Respect by sharing great music, being active, and contributing to the community. Check the Respect page for the leaderboard.",
-  },
-  {
     q: 'Can I schedule posts?',
     a: 'Yes! Click the clock icon in the compose bar to schedule a post for later. You can view and manage scheduled posts from the clock icon in the header.',
   },

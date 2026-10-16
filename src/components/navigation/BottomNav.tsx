@@ -34,7 +34,7 @@ const PRIMARY_TABS = [
     id: 'chat',
     label: 'Chat',
     href: '/chat',
-    matchPaths: ['/chat', '/messages'],
+    matchPaths: ['/chat'],
     icon: (
       <svg
         className="w-5 h-5 md:w-4 md:h-4"

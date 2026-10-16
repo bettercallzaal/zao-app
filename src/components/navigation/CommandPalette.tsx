@@ -10,37 +10,13 @@ interface CommandPaletteProps {
   onClose: () => void;
 }
 
+// Only pages this app ships. The ZAO OS lab links (agents, governance, Respect,
+// music, spaces, DMs) are not part of this client.
 const COMMAND_GROUPS = {
-  fleet: {
-    label: 'Fleet & Agents',
-    commands: [
-      { label: 'ZOE & Agent Fleet', key: 'agent-fleet', href: '/os/agents' },
-      { label: 'Chat with Assistant', key: 'assistant', href: '/assistant' },
-      { label: 'Agent Infrastructure Health', key: 'agent-health', href: '/api/agents/health' },
-    ],
-  },
-  operations: {
-    label: 'Command & Operations',
-    commands: [
-      { label: 'ZAO OS Command Center', key: 'command-center', href: '/os' },
-      { label: 'Project Overview & Tasks', key: 'overview', href: '/overview' },
-      { label: 'WaveWarZ Arena', key: 'wavewarz', href: '/wavewarz' },
-      { label: 'ZABAL Staking', key: 'staking', href: '/stake' },
-      { label: 'Governance Proposals', key: 'governance', href: '/governance' },
-      { label: 'Respect Rankings', key: 'respect', href: '/respect' },
-      { label: 'Leaderboard', key: 'leaderboard', href: '/zao-leaderboard' },
-      { label: 'Admin Controls', key: 'admin', href: '/admin' },
-    ],
-  },
   navigation: {
     label: 'Navigation',
     commands: [
       { label: 'Chat (Farcaster)', key: 'chat', href: '/chat' },
-      { label: 'Music Player', key: 'music', href: '/music' },
-      { label: 'Spaces (Live Audio)', key: 'spaces', href: '/calls' },
-      { label: 'Library', key: 'library', href: '/library' },
-      { label: 'Directory', key: 'directory', href: '/directory' },
-      { label: 'Messages (XMTP)', key: 'messages', href: '/messages' },
       { label: 'Notifications', key: 'notifications', href: '/notifications' },
       { label: 'Settings', key: 'settings', href: '/settings' },
     ],
