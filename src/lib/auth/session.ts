@@ -91,28 +91,6 @@ export async function saveSession(
   await session.save();
 }
 
-export async function saveWalletSession(data: {
-  walletAddress: string;
-  fid?: number;
-  username?: string;
-  displayName?: string;
-  pfpUrl?: string;
-}) {
-  const session = await getSession();
-  session.walletAddress = data.walletAddress.toLowerCase();
-  session.authMethod = 'wallet';
-  session.fid = data.fid || 0;
-  session.username = data.username || '';
-  session.displayName =
-    data.displayName || data.walletAddress.slice(0, 6) + '...' + data.walletAddress.slice(-4);
-  session.pfpUrl = data.pfpUrl || '';
-  session.signerUuid = null;
-  session.isAdmin =
-    (data.fid ? ADMIN_FIDS.includes(data.fid) : false) ||
-    ADMIN_WALLETS.includes(data.walletAddress.toLowerCase());
-  await session.save();
-}
-
 export async function clearSession() {
   const session = await getSession();
   session.destroy();

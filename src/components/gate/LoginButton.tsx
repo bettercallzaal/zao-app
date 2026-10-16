@@ -3,7 +3,6 @@
 import { SignInButton, type StatusAPIResponse, useProfile } from '@farcaster/auth-kit';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { WalletLoginButton } from './WalletLoginButton';
 
 export function LoginButton() {
   const router = useRouter();
@@ -162,18 +161,6 @@ export function LoginButton() {
           </p>
         )}
       </div>
-
-      {/* Divider */}
-      <div className="flex items-center gap-3 w-full">
-        <div className="flex-1 h-px bg-gray-700/40" />
-        <span className="text-[10px] text-gray-600 uppercase tracking-wider">
-          no Farcaster? use wallet
-        </span>
-        <div className="flex-1 h-px bg-gray-700/40" />
-      </div>
-
-      {/* Secondary: Wallet */}
-      <WalletLoginButton />
     </div>
   );
 }

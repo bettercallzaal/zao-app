@@ -130,55 +130,6 @@ export async function POST(req: NextRequest) {
       ).catch((err) => logger.error('[notify]', err));
     }
 
-    // Cross-post to Telegram and Discord (fire and forget, non-blocking)
-    // Only if env vars are set — skip silently otherwise
-    if (castData?.hash) {
-      Promise.allSettled([
-        // Telegram
-        (async () => {
-          if (!process.env.TELEGRAM_BOT_TOKEN) return;
-          const { normalizeForTelegram } = await import('@/lib/publish/normalize');
-          const { publishToTelegram, escapeMarkdownV2 } = await import('@/lib/publish/telegram');
-          const farcasterLink = `https://warpcast.com/~/conversations/${castData.hash}`;
-          const normalized = normalizeForTelegram({
-            text: `${session.displayName} in #${primaryChannel}:\n\n${text}\n\n🔗 View on Farcaster: ${farcasterLink}\n🌐 Join ZAO OS: https://zaoos.com`,
-            castHash: castData.hash,
-          });
-          const result = await publishToTelegram({
-            text: escapeMarkdownV2(normalized.text),
-          });
-          if (!result.success) {
-            logger.error('[chat/send] Telegram cross-post failed:', result.error);
-          }
-        })(),
-        // Discord
-        (async () => {
-          if (!process.env.DISCORD_WEBHOOK_URL) return;
-          const { normalizeForDiscord } = await import('@/lib/publish/normalize');
-          const { publishToDiscord, buildZaoEmbed } = await import('@/lib/publish/discord');
-          const normalized = normalizeForDiscord({
-            text,
-            castHash: castData.hash,
-          });
-          const farcasterLink = `https://warpcast.com/~/conversations/${castData.hash}`;
-          const embed = buildZaoEmbed({
-            title: `#${primaryChannel}`,
-            description: `${normalized.text}\n\n[View on Farcaster](${farcasterLink}) · [Join ZAO OS](https://zaoos.com)`,
-            url: farcasterLink,
-            footerText: `${session.displayName} via ZAO OS`,
-          });
-          const result = await publishToDiscord({
-            text: '',
-            embeds: [embed],
-            username: 'ZAO OS',
-          });
-          if (!result.success) {
-            logger.error('[chat/send] Discord cross-post failed:', result.error);
-          }
-        })(),
-      ]).catch((err) => logger.error('[chat/send] Cross-post error:', err));
-    }
-
     // Send push + in-app notifications (fire and forget)
     const channelList = [...channels].map((c) => `#${c}`).join(', ');
     const preview = text.length > 80 ? text.slice(0, 80) + '...' : text;

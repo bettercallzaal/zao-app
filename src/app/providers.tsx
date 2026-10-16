@@ -1,21 +1,11 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-// Lazy-load heavy wallet/auth providers — not needed on initial page render
+// Lazy-load the Farcaster auth provider - not needed on initial page render
 import dynamic from 'next/dynamic';
 import { ThemeProvider } from 'next-themes';
 import { useState } from 'react';
-import { type State, WagmiProvider } from 'wagmi';
 import { MiniAppGate } from '@/components/miniapp/MiniAppGate';
-import { getWagmiConfig } from '@/lib/wagmi/config';
-
-const LazyRainbowKit = dynamic(
-  () =>
-    import('@/components/providers/RainbowKitWrapper').then((m) => ({
-      default: m.RainbowKitWrapper,
-    })),
-  { ssr: false },
-);
 
 const LazyAuthKit = dynamic(
   () =>
@@ -25,11 +15,9 @@ const LazyAuthKit = dynamic(
 
 interface ProvidersProps {
   children: React.ReactNode;
-  wagmiInitialState?: State;
 }
 
-export function Providers({ children, wagmiInitialState }: ProvidersProps) {
-  const [wagmiConfig] = useState(() => getWagmiConfig());
+export function Providers({ children }: ProvidersProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -43,21 +31,17 @@ export function Providers({ children, wagmiInitialState }: ProvidersProps) {
   );
 
   return (
-    <WagmiProvider config={wagmiConfig} initialState={wagmiInitialState}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange={false}
-        >
-          <LazyRainbowKit>
-            <LazyAuthKit>
-              <MiniAppGate>{children}</MiniAppGate>
-            </LazyAuthKit>
-          </LazyRainbowKit>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        enableSystem
+        disableTransitionOnChange={false}
+      >
+        <LazyAuthKit>
+          <MiniAppGate>{children}</MiniAppGate>
+        </LazyAuthKit>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }

@@ -28,9 +28,7 @@ describe('ENV module', () => {
 
   afterEach(() => {
     clearRequired();
-    delete process.env.TELEGRAM_BOT_TOKEN;
-    delete process.env.CRM_BOT_SECRET;
-    delete process.env.CRM_CAPTURE_TOKEN;
+    delete process.env.NEYNAR_WEBHOOK_SECRET;
   });
 
   it('loads and exposes required var values', async () => {
@@ -49,59 +47,13 @@ describe('ENV module', () => {
 
   it('returns undefined for unset optional vars', async () => {
     const { ENV } = await import('../env');
-    expect(ENV.TELEGRAM_BOT_TOKEN).toBeUndefined();
-    expect(ENV.DISCORD_WEBHOOK_URL).toBeUndefined();
-    expect(ENV.PRIVY_APP_ID).toBeUndefined();
-    expect(ENV.CRM_BOT_SECRET).toBeUndefined();
+    expect(ENV.NEYNAR_WEBHOOK_SECRET).toBeUndefined();
+    expect(ENV.NEXT_PUBLIC_SIWF_DOMAIN).toBeUndefined();
   });
 
   it('captures an optional var when set', async () => {
-    process.env.TELEGRAM_BOT_TOKEN = 'test-bot-token';
+    process.env.NEYNAR_WEBHOOK_SECRET = 'test-webhook-secret';
     const { ENV } = await import('../env');
-    expect(ENV.TELEGRAM_BOT_TOKEN).toBe('test-bot-token');
-  });
-});
-
-describe('optionalSecretEnv validation', () => {
-  beforeEach(() => {
-    vi.resetModules();
-    setRequired();
-  });
-
-  afterEach(() => {
-    clearRequired();
-    delete process.env.CRM_BOT_SECRET;
-    delete process.env.CRM_CAPTURE_TOKEN;
-  });
-
-  it('throws when CRM_BOT_SECRET is set but shorter than 32 chars', async () => {
-    process.env.CRM_BOT_SECRET = 'tooshort';
-    await expect(import('../env')).rejects.toThrow('CRM_BOT_SECRET is set but too short');
-  });
-
-  it('allows CRM_BOT_SECRET when exactly 32 chars', async () => {
-    const secret = 'a'.repeat(32);
-    process.env.CRM_BOT_SECRET = secret;
-    const { ENV } = await import('../env');
-    expect(ENV.CRM_BOT_SECRET).toBe(secret);
-  });
-
-  it('allows CRM_BOT_SECRET longer than 32 chars', async () => {
-    const secret = 'a'.repeat(64);
-    process.env.CRM_BOT_SECRET = secret;
-    const { ENV } = await import('../env');
-    expect(ENV.CRM_BOT_SECRET).toBe(secret);
-  });
-
-  it('throws when CRM_CAPTURE_TOKEN is shorter than 16 chars', async () => {
-    process.env.CRM_CAPTURE_TOKEN = 'short';
-    await expect(import('../env')).rejects.toThrow('CRM_CAPTURE_TOKEN is set but too short');
-  });
-
-  it('allows CRM_CAPTURE_TOKEN when at least 16 chars', async () => {
-    const token = 'a'.repeat(16);
-    process.env.CRM_CAPTURE_TOKEN = token;
-    const { ENV } = await import('../env');
-    expect(ENV.CRM_CAPTURE_TOKEN).toBe(token);
+    expect(ENV.NEYNAR_WEBHOOK_SECRET).toBe('test-webhook-secret');
   });
 });

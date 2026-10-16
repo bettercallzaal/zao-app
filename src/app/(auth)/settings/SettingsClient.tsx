@@ -9,8 +9,6 @@ import { NotificationBell } from '@/components/navigation/NotificationBell';
 import { PageHeader } from '@/components/navigation/PageHeader';
 import { SignerConnect } from '@/components/chat/SignerConnect';
 import { ShareToFarcaster, shareTemplates } from '@/components/social/ShareToFarcaster';
-import { LazySolanaWalletConnect } from '@/components/solana/LazySolanaWalletConnect';
-import { useXMTPContextSafe } from '@/contexts/XMTPContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useENSNames } from '@/hooks/useENS';
 import type { SessionData } from '@/types';
@@ -364,7 +362,6 @@ function StreamOverlays({ fid }: { fid: number }) {
 
 export function SettingsClient({ session, profile }: SettingsClientProps) {
   const { logout, refetch } = useAuth();
-  const { isConnected: xmtpConnected, activeXMTPAddress, switchWallet } = useXMTPContextSafe();
 
   // Messaging preferences
   const [msgPrefs, setMsgPrefs] = useState<MessagingPrefs>(PREFS_DEFAULTS);
@@ -561,9 +558,6 @@ export function SettingsClient({ session, profile }: SettingsClientProps) {
 
   const hasSigner = !!session?.signerUuid;
 
-  // Solana wallet state
-  const [solanaWallet, setSolanaWallet] = useState(profile?.solana_wallet || null);
-
   // Push notification state
   const [pushEnabled, setPushEnabled] = useState<boolean | null>(null);
   const [pushToggling, setPushToggling] = useState(false);
@@ -638,7 +632,7 @@ export function SettingsClient({ session, profile }: SettingsClientProps) {
   };
 
   // Account count for progress indicator
-  const accountConnections = [!!session?.walletAddress, !!session?.fid, !!solanaWallet];
+  const accountConnections = [!!session?.walletAddress, !!session?.fid];
   const accountConnectedCount = accountConnections.filter(Boolean).length;
 
   if (!session || !profile) {
@@ -696,10 +690,6 @@ export function SettingsClient({ session, profile }: SettingsClientProps) {
               }
             />
 
-            {/* 3. Solana */}
-            <div className="py-3">
-              <LazySolanaWalletConnect savedWallet={solanaWallet} onSaved={setSolanaWallet} />
-            </div>
           </div>
         </section>
 
@@ -709,35 +699,6 @@ export function SettingsClient({ session, profile }: SettingsClientProps) {
             <p className="text-xs text-gray-500 uppercase tracking-wider">Features</p>
           </div>
           <div className="bg-[#0d1b2a] rounded-xl px-4 border border-white/[0.08] divide-y divide-gray-800/50">
-            {/* Messaging (XMTP) */}
-            <FeatureRow
-              name="Messaging (XMTP)"
-              detail={
-                xmtpConnected && activeXMTPAddress
-                  ? shortAddr(activeXMTPAddress)
-                  : xmtpConnected
-                    ? 'Enabled'
-                    : 'Not enabled'
-              }
-              action={
-                xmtpConnected && activeXMTPAddress ? (
-                  <button
-                    onClick={switchWallet}
-                    className="text-[10px] text-[#f5a623] hover:text-[#ffd700] transition-colors"
-                  >
-                    Switch
-                  </button>
-                ) : !xmtpConnected ? (
-                  <Link
-                    href="/messages"
-                    className="text-[10px] text-[#f5a623] hover:text-[#ffd700] transition-colors"
-                  >
-                    Enable in Messages
-                  </Link>
-                ) : null
-              }
-            />
-
             {/* Push Notifications */}
             <FeatureRow
               name="Push Notifications"
@@ -1422,20 +1383,6 @@ export function SettingsClient({ session, profile }: SettingsClientProps) {
                     </svg>
                   )}
                 </button>
-              </div>
-            )}
-
-            {/* Solana wallet */}
-            {solanaWallet && (
-              <div className="flex items-center gap-3 px-5 py-4">
-                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-bold text-purple-400">SOL</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-500">Solana Wallet</p>
-                  <p className="text-sm text-white font-mono truncate">{solanaWallet}</p>
-                </div>
-                <CopyButton text={solanaWallet} />
               </div>
             )}
 

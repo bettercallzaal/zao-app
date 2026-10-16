@@ -10,21 +10,6 @@ function optionalEnv(name: string): string | undefined {
   return process.env[name] || undefined;
 }
 
-/**
- * Optional secret that, IF set, must meet a minimum length. Throws at module
- * load on a misconfigured (too-short / placeholder) value rather than letting a
- * guessable credential silently reach production. Unset stays undefined.
- */
-function optionalSecretEnv(name: string, minLength: number): string | undefined {
-  const value = process.env[name] || undefined;
-  if (value && value.length < minLength) {
-    throw new Error(
-      `${name} is set but too short (min ${minLength} chars). Generate with: openssl rand -hex 32`,
-    );
-  }
-  return value;
-}
-
 export const ENV = {
   // Public (safe for client)
   NEXT_PUBLIC_SUPABASE_URL: requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
@@ -39,98 +24,21 @@ export const ENV = {
 
   // Optional
   NEYNAR_WEBHOOK_SECRET: optionalEnv('NEYNAR_WEBHOOK_SECRET'),
-  GITHUB_WEBHOOK_SECRET: optionalEnv('GITHUB_WEBHOOK_SECRET'),
-  GITHUB_WEBHOOK_TG_CHAT_ID: optionalEnv('GITHUB_WEBHOOK_TG_CHAT_ID'),
   NEXT_PUBLIC_SIWF_DOMAIN: optionalEnv('NEXT_PUBLIC_SIWF_DOMAIN'),
-  NEXT_PUBLIC_WC_PROJECT_ID: optionalEnv('NEXT_PUBLIC_WC_PROJECT_ID'),
   NEXT_PUBLIC_OPTIMISM_RPC_URL: optionalEnv('NEXT_PUBLIC_OPTIMISM_RPC_URL'),
 
   // Content moderation (optional)
   PERSPECTIVE_API_KEY: optionalEnv('PERSPECTIVE_API_KEY'),
-
-  // Minimax (optional)
-  MINIMAX_API_KEY: optionalEnv('MINIMAX_API_KEY'),
-  MINIMAX_MODEL: optionalEnv('MINIMAX_MODEL'),
-  MINIMAX_API_URL: optionalEnv('MINIMAX_API_URL'),
 
   // @thezao official account (governance-powered posting)
   ZAO_OFFICIAL_FID: optionalEnv('ZAO_OFFICIAL_FID'),
   ZAO_OFFICIAL_SIGNER_UUID: optionalEnv('ZAO_OFFICIAL_SIGNER_UUID'),
   ZAO_OFFICIAL_NEYNAR_API_KEY: optionalEnv('ZAO_OFFICIAL_NEYNAR_API_KEY'),
 
-  // WaveWarZ official account (governance-powered posting to /wavewarz channel)
-  WAVEWARZ_OFFICIAL_FID: optionalEnv('WAVEWARZ_OFFICIAL_FID'),
-  WAVEWARZ_OFFICIAL_SIGNER_UUID: optionalEnv('WAVEWARZ_OFFICIAL_SIGNER_UUID'),
-  WAVEWARZ_OFFICIAL_NEYNAR_API_KEY: optionalEnv('WAVEWARZ_OFFICIAL_NEYNAR_API_KEY'),
-
-  // X/Twitter cross-posting (shared ZAO app account, admin-only)
-  X_API_KEY: optionalEnv('X_API_KEY'),
-  X_API_SECRET: optionalEnv('X_API_SECRET'),
-  X_ACCESS_TOKEN: optionalEnv('X_ACCESS_TOKEN'),
-  X_ACCESS_SECRET: optionalEnv('X_ACCESS_SECRET'),
-
-  // Lens Protocol V3
-  NEXT_PUBLIC_LENS_APP_ADDRESS: optionalEnv('NEXT_PUBLIC_LENS_APP_ADDRESS'),
-
-  // Telegram Bot API (cross-posting to Telegram channel/group)
-  TELEGRAM_BOT_TOKEN: optionalEnv('TELEGRAM_BOT_TOKEN'),
-  TELEGRAM_CHAT_ID: optionalEnv('TELEGRAM_CHAT_ID'),
-
-  // Discord webhook (cross-posting to Discord channel)
-  DISCORD_WEBHOOK_URL: optionalEnv('DISCORD_WEBHOOK_URL'),
-
-  // Threads (Meta Graph API — requires approved Meta Business App)
-  THREADS_APP_ID: optionalEnv('THREADS_APP_ID'),
-  THREADS_APP_SECRET: optionalEnv('THREADS_APP_SECRET'),
-  THREADS_ACCESS_TOKEN: optionalEnv('THREADS_ACCESS_TOKEN'),
-  THREADS_USER_ID: optionalEnv('THREADS_USER_ID'),
-
   // Farcaster read API proxy (e.g., Hypersnap free Neynar proxy)
   FARCASTER_READ_API_BASE: optionalEnv('FARCASTER_READ_API_BASE'),
 
-  // ENS NameWrapper — dedicated operator wallet (NOT the thezao.eth owner)
-  // Generate with: npx tsx scripts/generate-ens-operator.ts
-  // Then approve as operator on app.ens.domains
-  ENS_OPERATOR_PRIVATE_KEY: optionalEnv('ENS_OPERATOR_PRIVATE_KEY'),
-
-  // Agent Swarm (VAULT/BANKER/DEALER)
-  // Privy -- TEE-secured wallet signing (replaces raw private keys)
-  PRIVY_APP_ID: optionalEnv('PRIVY_APP_ID'),
-  PRIVY_APP_SECRET: optionalEnv('PRIVY_APP_SECRET'),
-  VAULT_WALLET_ID: optionalEnv('VAULT_WALLET_ID'),
-  BANKER_WALLET_ID: optionalEnv('BANKER_WALLET_ID'),
-  DEALER_WALLET_ID: optionalEnv('DEALER_WALLET_ID'),
   // 0x Swap API -- swap routing on Base
   ZX_API_KEY: optionalEnv('ZX_API_KEY'),
 
-  // Juke developer API -- server-side Juke space creation (doc 695, Path B).
-  // Key-only per juke.audio/llms.txt: `/v1/developer/spaces` takes
-  // `X-Juke-Api-Key` and derives the room owner from the app's owner_fid.
-  // No bearer JWT is sent. Apply at juke.audio/developers. Absent = 503;
-  // the keyless /live embed still works.
-  JUKE_API_KEY: optionalEnv('JUKE_API_KEY'),
-  // DEPRECATED 2026-05-22: llms.txt confirmed key-only auth on
-  // /v1/developer/spaces. Kept here to avoid breaking existing .env.local
-  // files; no longer read by the Juke client.
-  JUKE_USER_TOKEN: optionalEnv('JUKE_USER_TOKEN'),
-  // Shared password for /api/juke/space — lets the /live/create page and the
-  // ZAOcoworking bot create spaces without an admin session. Unset = the
-  // password path is disabled (admin session still works).
-  JUKE_CREATE_PASSWORD: optionalEnv('JUKE_CREATE_PASSWORD'),
-  // HMAC secret shared with Juke's webhook dispatcher. Verifies
-  // `X-Juke-Signature: t={ts},v1={hex_hmac}` on /api/juke/webhooks. Generate
-  // a random 32+ byte hex value (`openssl rand -hex 32`) and pass the same
-  // value to Juke when registering the webhook at POST /v1/developer/webhooks.
-  JUKE_WEBHOOK_SECRET: optionalEnv('JUKE_WEBHOOK_SECRET'),
-  // Bearer secret shared with ZOE (Telegram bot) so it can write CRM
-  // contacts/interactions via POST /api/crm/interactions without an admin
-  // session. Generate `openssl rand -hex 32`; set the same value in the bot's
-  // env (CRM_BOT_SECRET). Unset = the bot write path is disabled (an admin
-  // iron-session still works on the same route). Must be >=32 chars if set (C-H2).
-  CRM_BOT_SECRET: optionalSecretEnv('CRM_BOT_SECRET', 32),
-
-  // Public CRM capture endpoint token (optional). If set, POST /api/crm/capture
-  // requires ?token=<this value> or an Authorization header. Generate with:
-  // openssl rand -hex 16. Unset = open to all origins (use CORS to gate).
-  CRM_CAPTURE_TOKEN: optionalSecretEnv('CRM_CAPTURE_TOKEN', 16),
 } as const;

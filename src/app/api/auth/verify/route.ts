@@ -9,7 +9,6 @@ import { getUserByFid } from '@/lib/farcaster/neynar';
 import { checkAllowlist } from '@/lib/gates/allowlist';
 import { logger } from '@/lib/logger';
 import { createInAppNotification } from '@/lib/notifications';
-import { autoCastToZao } from '@/lib/publish/auto-cast';
 
 const OPTIMISM_RPC_URL =
   process.env.NEXT_PUBLIC_OPTIMISM_RPC_URL || 'https://optimism-rpc.publicnode.com';
@@ -243,13 +242,6 @@ export async function POST(req: NextRequest) {
                 actorPfpUrl: user.pfp_url,
               }).catch((err) => logger.error('[notify]', err));
             }
-
-            const handle = user.username
-              ? `@${user.username}`
-              : user.display_name || 'a new member';
-            autoCastToZao(`Welcome ${handle} to The ZAO! \u{1F3B6}`).catch((err) =>
-              logger.error('[welcome-cast]', err),
-            );
           }
         } catch (err) {
           logger.error('[Auth] Failed to upsert user record:', err);

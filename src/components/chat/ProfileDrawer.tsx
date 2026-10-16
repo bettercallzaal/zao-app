@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { OGBadge } from '@/components/badges/OGBadge';
-import HatBadge from '@/components/hats/HatBadge';
 import { ShareToFarcaster, shareTemplates } from '@/components/social/ShareToFarcaster';
 import { useEscapeClose } from '@/hooks/useEscapeClose';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
@@ -288,12 +287,6 @@ export function ProfileDrawer({ fid, onClose, onStartDm }: ProfileDrawerProps) {
                 )}
                 {profile.zaoName && profile.zaoName !== profile.displayName && (
                   <p className="text-xs text-gray-400 mt-1">{profile.zaoName}</p>
-                )}
-                {/* Hat role badges */}
-                {profile.verifiedAddresses.length > 0 && (
-                  <div className="mt-2">
-                    <HatBadge walletAddress={profile.verifiedAddresses[0]} compact={false} />
-                  </div>
                 )}
               </div>
 
