@@ -528,7 +528,7 @@ export function SettingsClient({ session, profile }: SettingsClientProps) {
       if (!inMiniApp) {
         // Show alert — push notifications require the Farcaster mini app
         alert(
-          'Push notifications can only be enabled when using ZAO OS as a Farcaster Mini App. Open ZAO OS from Warpcast to enable.',
+          'Push notifications can only be enabled when using The ZAO app as a mini app. Open The ZAO app from the Farcaster app to enable.',
         );
         setPushToggling(false);
         return;
@@ -978,8 +978,8 @@ export function SettingsClient({ session, profile }: SettingsClientProps) {
                 </p>
                 <p className="text-xs text-gray-500">
                   {hasSigner
-                    ? 'You can post directly to Farcaster from ZAO OS'
-                    : 'Connect to post casts, reply, and react directly from ZAO OS'}
+                    ? 'You can post directly to Farcaster from The ZAO app'
+                    : 'Connect to post casts, reply, and react directly from The ZAO app'}
                 </p>
               </div>
             </div>
@@ -1007,7 +1007,7 @@ export function SettingsClient({ session, profile }: SettingsClientProps) {
               <div className="py-2">
                 <SignerConnect onSuccess={refetch} />
                 <p className="text-[10px] text-gray-500 mt-2 px-4">
-                  This approves a managed signer for your Farcaster account via Neynar. ZAO OS never
+                  This approves a managed signer for your Farcaster account via Neynar. The ZAO app never
                   has access to your personal wallet keys.
                 </p>
               </div>
