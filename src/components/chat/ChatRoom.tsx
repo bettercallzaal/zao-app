@@ -4,17 +4,11 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { communityConfig } from '@/../community.config';
-import { GroupInfoDrawer } from '@/components/messages/GroupInfoDrawer';
-import { MessageCompose } from '@/components/messages/MessageCompose';
-import { MessageThread } from '@/components/messages/MessageThread';
-import { NewConversationDialog } from '@/components/messages/NewConversationDialog';
 import { NotificationBell } from '@/components/navigation/NotificationBell';
-import { useXMTPContext, type ZaoMember } from '@/contexts/XMTPContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useChat } from '@/hooks/useChat';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useMobile } from '@/hooks/useMobile';
-import { useWalletXMTP } from '@/hooks/useWalletXMTP';
 import { followingFeedEnabled } from '@/lib/farcaster/following-feed-flag';
 import type { QuotedCastData } from '@/types';
 import { ComposeBar, type ComposeBarHandle, type ReplyContext } from './ComposeBar';
@@ -98,123 +92,42 @@ export function ChatRoom() {
   const [respectOpen, setRespectOpen] = useState(false);
   const [empireOpen, setEmpireOpen] = useState(false);
   const [profileFid, setProfileFid] = useState<number | null>(null);
-  const [dmDialogType, setDmDialogType] = useState<'dm' | 'group' | null>(null);
-  const [groupInfoId, setGroupInfoId] = useState<string | null>(null);
-  const [groupMembers, setGroupMembers] = useState<
-    { inboxId: string; displayName: string; pfpUrl: string; username?: string }[]
-  >([]);
-  const [loadingGroupMembers, setLoadingGroupMembers] = useState(false);
   const [contentFilter, setContentFilter] = useState<ContentFilter>('all');
   const [sortMode, setSortMode] = useState<SortMode>('newest');
   const composeRef = useRef<ComposeBarHandle>(null);
 
-  // XMTP context
-  const xmtp = useXMTPContext();
-  const walletXmtp = useWalletXMTP();
-  const viewMode = xmtp.activeConversationId
-    ? 'xmtp'
-    : isTrending
-      ? 'trending'
-      : isFollowing
-        ? 'following'
-        : 'channel';
-  const activeXmtpConversation =
-    xmtp.conversations.find((c) => c.id === xmtp.activeConversationId) ?? null;
-
-  const handleXmtpConnect = useCallback(async () => {
-    if (walletXmtp.canConnect) {
-      await walletXmtp.connectWalletToXMTP();
-    }
-    // Fallback: if no wallet connected, the sidebar will show RainbowKit connect
-  }, [walletXmtp]);
-
-  const handleConversationSelect = useCallback(
-    (id: string) => {
-      xmtp.selectConversation(id);
-      setSidebarOpen(false);
-    },
-    [xmtp],
-  );
-
-  const handleStartDmWithMember = useCallback(
-    async (member: ZaoMember) => {
-      await xmtp.startDmWithMember(member);
-      setSidebarOpen(false);
-    },
-    [xmtp],
-  );
+  const viewMode = isTrending ? 'trending' : isFollowing ? 'following' : 'channel';
 
   const handleChannelSelect = useCallback(
     (ch: string) => {
       setActiveChannel(ch);
       setIsTrending(false);
       setIsFollowing(false);
-      xmtp.selectConversation(null);
       setSelectedThreadHash(null);
       setSidebarOpen(false);
     },
-    [xmtp],
+    [],
   );
 
   const handleFollowingSelect = useCallback(() => {
     setIsFollowing(true);
     setIsTrending(false);
-    xmtp.selectConversation(null);
     setSelectedThreadHash(null);
     setSidebarOpen(false);
-  }, [xmtp]);
+  }, []);
 
   const handleTrendingSelect = useCallback(() => {
     setIsTrending(true);
     setIsFollowing(false);
-    xmtp.selectConversation(null);
     setSelectedThreadHash(null);
     setSidebarOpen(false);
-  }, [xmtp]);
-
-  const handleCreateDm = useCallback(
-    async (address: `0x${string}`, peerProfile?: import('@/lib/xmtp/client').XMTPPeerProfile) => {
-      const convId = await xmtp.createDm(address, peerProfile);
-      if (convId) xmtp.selectConversation(convId);
-    },
-    [xmtp],
-  );
-
-  const handleCreateGroup = useCallback(
-    async (
-      name: string,
-      members: { address: `0x${string}`; profile?: import('@/lib/xmtp/client').XMTPPeerProfile }[],
-    ) => {
-      const convId = await xmtp.createGroup(name, members);
-      if (convId) xmtp.selectConversation(convId);
-    },
-    [xmtp],
-  );
-
-  const handleOpenGroupInfo = useCallback(
-    async (convId: string) => {
-      setGroupInfoId(convId);
-      setLoadingGroupMembers(true);
-      const members = await xmtp.getGroupMembers(convId);
-      setGroupMembers(members);
-      setLoadingGroupMembers(false);
-    },
-    [xmtp],
-  );
+  }, []);
 
   // Filtered + sorted messages
   const filteredMessages = useMemo(
     () => filterAndSortCasts(messages, contentFilter, sortMode),
     [messages, contentFilter, sortMode],
   );
-
-  // Auto-connect XMTP when wallet is available (skip if previous attempt errored)
-  useEffect(() => {
-    if (!user || xmtp.isConnected || xmtp.isConnecting || xmtp.error) return;
-    if (walletXmtp.canConnect) {
-      walletXmtp.connectWalletToXMTP();
-    }
-  }, [user, walletXmtp.canConnect]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset filters on channel switch + fetch submissions for queue
 
@@ -291,42 +204,6 @@ export function ChatRoom() {
 
   return (
     <div className="flex h-[calc(100dvh-9rem)] md:h-[calc(100dvh-6.5rem)] bg-[#0a1628] text-white overflow-hidden">
-      {/* Action error toast (DM/group creation) */}
-      {xmtp.actionError && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[80] max-w-sm w-full mx-4">
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/15 border border-red-500/30 shadow-lg backdrop-blur-sm">
-            <svg
-              className="w-4 h-4 text-red-400 flex-shrink-0"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"
-              />
-            </svg>
-            <span className="text-sm text-red-300 flex-1">{xmtp.actionError}</span>
-            <button
-              onClick={xmtp.clearActionError}
-              className="text-red-400/60 hover:text-red-400"
-              aria-label="Dismiss"
-            >
-              <svg
-                className="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
       <Sidebar
         user={user}
         isOpen={sidebarOpen}
@@ -355,41 +232,7 @@ export function ChatRoom() {
           setEmpireOpen(true);
           setSidebarOpen(false);
         }}
-        xmtpConnected={xmtp.isConnected}
-        xmtpConnecting={xmtp.isConnecting}
-        xmtpError={xmtp.error}
-        xmtpConversations={xmtp.conversations}
-        activeConversationId={xmtp.activeConversationId}
-        onXmtpConnect={handleXmtpConnect}
-        walletConnected={walletXmtp.isWalletConnected}
-        onConversationSelect={handleConversationSelect}
-        onNewDm={() => setDmDialogType('dm')}
-        onNewGroup={() => setDmDialogType('group')}
-        zaoMembers={xmtp.zaoMembers}
-        loadingMembers={xmtp.loadingMembers}
-        onStartDmWithMember={handleStartDmWithMember}
-        onGroupInfo={handleOpenGroupInfo}
-        onRemoveConversation={xmtp.removeConversation}
-        onRefreshMembers={xmtp.refreshMembers}
-        onResetXmtp={xmtp.disconnectAll}
       />
-
-      {/* Group Info Drawer */}
-      {groupInfoId &&
-        (() => {
-          const conv = xmtp.conversations.find((c) => c.id === groupInfoId);
-          if (!conv) return null;
-          return (
-            <GroupInfoDrawer
-              conversation={conv}
-              members={groupMembers}
-              loading={loadingGroupMembers}
-              onClose={() => setGroupInfoId(null)}
-              onRemove={() => xmtp.removeConversation(groupInfoId)}
-              onLeave={() => xmtp.leaveGroup(groupInfoId)}
-            />
-          );
-        })()}
 
       {/* Main chat + music sidebar in a shared flex row */}
       <div className="flex flex-1 min-w-0">
@@ -414,97 +257,6 @@ export function ChatRoom() {
               </button>
             )}
 
-            {viewMode === 'xmtp' ? (
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <button
-                  onClick={() => xmtp.selectConversation(null)}
-                  className="text-gray-400 hover:text-white transition-colors flex-shrink-0 -ml-1 p-1 rounded-lg hover:bg-white/5"
-                  title="Back to channel"
-                  aria-label="Back to channel"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15.75 19.5L8.25 12l7.5-7.5"
-                    />
-                  </svg>
-                </button>
-                {activeXmtpConversation?.peerPfpUrl ? (
-                  <div className="w-8 h-8 relative flex-shrink-0">
-                    <Image
-                      src={activeXmtpConversation.peerPfpUrl}
-                      alt={`${activeXmtpConversation.peerDisplayName || activeXmtpConversation.name || 'Conversation'} avatar`}
-                      fill
-                      className="rounded-full object-cover"
-                    />
-                  </div>
-                ) : activeXmtpConversation?.type === 'group' ? (
-                  <div className="w-8 h-8 rounded-lg bg-[#f5a623]/15 flex items-center justify-center flex-shrink-0">
-                    <svg
-                      className="w-4 h-4 text-[#f5a623]"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772"
-                      />
-                    </svg>
-                  </div>
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#f5a623]/20 to-[#f5a623]/5 flex items-center justify-center flex-shrink-0 border border-[#f5a623]/10">
-                    <span className="text-xs text-[#f5a623]/80 font-semibold">
-                      {(activeXmtpConversation?.peerDisplayName ||
-                        activeXmtpConversation?.name ||
-                        '?')[0]?.toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h2 className="font-semibold text-sm text-white truncate">
-                    {activeXmtpConversation?.peerDisplayName ||
-                      activeXmtpConversation?.name ||
-                      'Message'}
-                  </h2>
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                      <span className="text-[10px] text-gray-500">
-                        {activeXmtpConversation?.type === 'group' ? 'Encrypted group' : 'Encrypted'}
-                      </span>
-                    </div>
-                    {xmtp.connectedWallets.length > 0 && (
-                      <span className="text-[10px] text-gray-600">
-                        · {xmtp.connectedWallets.length} wallet
-                        {xmtp.connectedWallets.length > 1 ? 's' : ''}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : isFollowing ? (
-              <div className="flex-1 min-w-0">
-                <h2 className="font-semibold text-sm text-white">Following</h2>
-                <p className="text-[10px] text-gray-600 -mt-0.5">People you follow on Farcaster</p>
-              </div>
-            ) : isTrending ? (
-              <div className="flex-1 min-w-0">
-                <h2 className="font-semibold text-sm text-white flex items-center gap-1.5">
-                  <span className="text-amber-400">🔥</span> Trending
-                </h2>
-                <p className="text-[10px] text-gray-600 -mt-0.5">Curated by Sopha</p>
-              </div>
-            ) : (
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="font-semibold text-sm text-white"># {activeChannel}</h2>
@@ -517,7 +269,6 @@ export function ChatRoom() {
                 </div>
                 <p className="text-[10px] text-gray-600 -mt-0.5">Posting to Farcaster</p>
               </div>
-            )}
 
             {(viewMode === 'channel' || viewMode === 'trending' || viewMode === 'following') && (
               <>
@@ -589,39 +340,6 @@ export function ChatRoom() {
             )}
           </header>
 
-          {viewMode === 'xmtp' ? (
-            <>
-              {/* XMTP Message Thread */}
-              <MessageThread
-                conversation={activeXmtpConversation}
-                messages={xmtp.messages}
-                loading={xmtp.loadingMessages}
-                xmtpState={
-                  xmtp.isConnecting
-                    ? 'connecting'
-                    : xmtp.error
-                      ? 'error'
-                      : xmtp.isConnected
-                        ? 'connected'
-                        : 'idle'
-                }
-                xmtpError={xmtp.error}
-                onNewDm={() => setDmDialogType('dm')}
-                onNewGroup={() => setDmDialogType('group')}
-                onRetryConnect={handleXmtpConnect}
-              />
-              {activeXmtpConversation && (
-                <MessageCompose
-                  onSend={xmtp.sendMessage}
-                  placeholder={
-                    activeXmtpConversation.type === 'dm'
-                      ? `Message ${activeXmtpConversation.peerDisplayName || activeXmtpConversation.name}...`
-                      : `Message #${activeXmtpConversation.name}...`
-                  }
-                />
-              )}
-            </>
-          ) : (
             <>
               {/* Channel / Trending tab bar */}
               <div
@@ -798,7 +516,6 @@ export function ChatRoom() {
                 </>
               )}
             </>
-          )}
         </div>
       </div>
 
@@ -852,24 +569,6 @@ export function ChatRoom() {
       <ProfileDrawer
         fid={profileFid}
         onClose={() => setProfileFid(null)}
-        onStartDm={(targetFid, username, displayName, pfpUrl, address) => {
-          setProfileFid(null);
-          const peerProfile = { fid: targetFid, username, displayName, pfpUrl };
-          xmtp.createDm(address as `0x${string}`, peerProfile).then((convId) => {
-            if (convId) xmtp.selectConversation(convId);
-          });
-        }}
-      />
-
-      {/* New DM/Group Dialog */}
-      <NewConversationDialog
-        type={dmDialogType || 'dm'}
-        isOpen={!!dmDialogType}
-        onClose={() => setDmDialogType(null)}
-        onCreateDm={handleCreateDm}
-        onCreateGroup={handleCreateGroup}
-        zaoMembers={xmtp.zaoMembers}
-        onStartDmWithMember={handleStartDmWithMember}
       />
     </div>
   );

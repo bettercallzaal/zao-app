@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { headers } from 'next/headers';
-import { cookieToInitialState } from 'wagmi';
-import { getWagmiConfig } from '@/lib/wagmi/config';
 import './globals.css';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -32,7 +30,7 @@ const miniAppEmbed = JSON.stringify({
 });
 
 const SITE_DESCRIPTION =
-  'The ZAO on Farcaster — a decentralized music community on Base with channel chat, encrypted XMTP DMs, shared listening, on-chain governance, reputation, and ZABAL tokens.';
+  'The ZAO on Farcaster — a decentralized music community on Base with channel chat, shared listening, on-chain governance, reputation, and ZABAL tokens.';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://zaoos.com'),
@@ -51,7 +49,6 @@ export const metadata: Metadata = {
     'decentralized music',
     'music community',
     'music DAO',
-    'XMTP',
     'ZABAL token',
     'onchain governance',
     'Farcaster mini app',
@@ -87,7 +84,6 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers();
   const nonce = headersList.get('x-nonce') ?? '';
-  const initialState = cookieToInitialState(getWagmiConfig(), headersList.get('cookie'));
 
   return (
     <html lang="en">
@@ -101,7 +97,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <MiniAppReady />
-        <Providers wagmiInitialState={initialState}>{children}</Providers>
+        <Providers>{children}</Providers>
         <ServiceWorkerRegistration />
         <SpeedInsights />
         <Analytics />
