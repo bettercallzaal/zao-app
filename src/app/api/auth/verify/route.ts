@@ -163,6 +163,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Only a COMPLETED "not a member" answer is a 403. If the FID lookup
+    // itself failed, a member listed by FID alone would be turned away as a
+    // non-member on a database error.
+    if (!gateResult?.allowed && gateByFidResult.status === 'rejected') {
+      logger.error('[Auth] Allowlist FID lookup failed for FID', fid, gateByFidResult.reason);
+      return NextResponse.json(
+        { error: 'Could not verify membership. Please try again.' },
+        { status: 502 },
+      );
+    }
+
     if (!gateResult?.allowed) {
       return NextResponse.json(
         { error: 'Not on allowlist', redirect: '/not-allowed' },
