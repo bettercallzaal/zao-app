@@ -22,6 +22,8 @@ import { useEffect } from 'react';
  */
 export function ServiceWorkerRegistration() {
   useEffect(() => {
+    // A dev worker would precache stale routes and hide edits during local testing.
+    if (process.env.NODE_ENV !== 'production') return;
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
 
     let updateInterval: ReturnType<typeof setInterval> | undefined;

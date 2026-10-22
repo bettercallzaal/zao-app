@@ -11,6 +11,7 @@ interface RateLimitConfig {
 // Rate limit configs ordered from most-specific to least-specific prefix.
 // The first matching prefix wins, so sub-routes must appear before their parent.
 const RATE_LIMITS: [string, RateLimitConfig][] = [
+  ['/api/workspace', { limit: 30, windowMs: MINUTE }],
   // Chat sub-routes (before /api/chat catch-all paths)
   ['/api/chat/send', { limit: 10, windowMs: MINUTE }],
   ['/api/chat/hide', { limit: 10, windowMs: MINUTE }],
@@ -55,9 +56,11 @@ function generateNonce(): string {
 }
 
 function buildCspHeader(nonce: string): string {
+  // React's development stack traces need eval; production keeps strict CSP.
+  const devEval = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '';
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://neynarxyz.github.io https://api.neynar.com https://open.spotify.com https://www.youtube.com https://w.soundcloud.com`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${devEval} https://neynarxyz.github.io https://api.neynar.com https://open.spotify.com https://www.youtube.com https://w.soundcloud.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https: http:",
     "media-src 'self' blob: https:",

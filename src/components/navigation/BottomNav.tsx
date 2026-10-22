@@ -34,6 +34,7 @@ const PRIMARY_TABS = [
 
 // Secondary pages shown in the "More" dropdown/sheet
 const MORE_ITEMS = [
+  { label: 'Workspace', href: '/workspace', icon: '⌘' },
   { label: 'Notifications', href: '/notifications', icon: '🔔' },
   { label: 'Settings', href: '/settings', icon: '⚙️' },
 ] as const;

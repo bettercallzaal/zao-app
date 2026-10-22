@@ -99,6 +99,12 @@ export default async function LandingPage() {
         {/* Login buttons */}
         <div className="w-full max-w-sm">
           <LoginButton />
+          <a
+            href="/workspace"
+            className="block mt-4 text-center text-sm text-[#f5a623] hover:underline"
+          >
+            Try the community workspace →
+          </a>
         </div>
       </div>
 
