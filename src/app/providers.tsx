@@ -15,9 +15,10 @@ const LazyAuthKit = dynamic(
 
 interface ProvidersProps {
   children: React.ReactNode;
+  nonce: string;
 }
 
-export function Providers({ children }: ProvidersProps) {
+export function Providers({ children, nonce }: ProvidersProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -33,6 +34,7 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
+        nonce={nonce}
         attribute="class"
         defaultTheme="dark"
         enableSystem

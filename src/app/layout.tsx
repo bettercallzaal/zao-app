@@ -82,7 +82,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const nonce = headersList.get('x-nonce') ?? '';
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta property="csp-nonce" content={nonce} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -93,7 +93,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <MiniAppReady />
-        <Providers>{children}</Providers>
+        <Providers nonce={nonce}>{children}</Providers>
         <ServiceWorkerRegistration />
         <SpeedInsights />
         <Analytics />
