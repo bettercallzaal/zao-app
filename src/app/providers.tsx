@@ -35,6 +35,9 @@ export function Providers({ children, nonce }: ProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         nonce={nonce}
+        // The executable bootstrap lives in RootLayout's next/script. Keep the
+        // library's duplicate inert, including during client-side remounts.
+        scriptProps={{ type: 'application/x-zao-theme' }}
         attribute="class"
         defaultTheme="dark"
         enableSystem

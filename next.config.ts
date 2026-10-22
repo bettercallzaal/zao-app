@@ -7,6 +7,9 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig: NextConfig = {
+  // Avoid the metadata streaming boundary hydration mismatch in Next 16.4.
+  // Resolve metadata before the shell; dynamic metadata may delay first byte.
+  htmlLimitedBots: /.*/,
   async redirects() {
     return [
       {

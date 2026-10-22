@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { headers } from 'next/headers';
+import Script from 'next/script';
 import './globals.css';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { MiniAppReady } from '@/components/miniapp/MiniAppReady';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 import { Providers } from './providers';
+import { THEME_BOOTSTRAP } from '@/lib/theme-bootstrap';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -84,6 +86,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <Script id="zao-theme-bootstrap" strategy="beforeInteractive" nonce={nonce}>
+          {THEME_BOOTSTRAP}
+        </Script>
         <meta property="csp-nonce" content={nonce} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

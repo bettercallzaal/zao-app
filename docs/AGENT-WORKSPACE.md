@@ -76,6 +76,20 @@ app's normal secrets and service configuration; it has not been deployed.
 
 ## Next useful loop
 
+### Development hydration compatibility
+
+Theme startup now uses a nonce-bearing `next/script` before hydration. The
+next-themes provider still manages theme changes, but its duplicate script is
+an inert custom data block so React can remount it without the executable-script
+warning. Five additional tests cover startup preferences and client remounts.
+
+`next.config.ts` uses blocking metadata (`htmlLimitedBots: /.*/`) as a workaround
+for the reported metadata boundary hydration mismatch. Dynamic metadata must
+finish before the HTML shell, which can increase time to first byte. Revisit
+this workaround after verifying an upstream fix with the affected browser.
+
+### Community testing
+
 Collect feedback from Zaal and Ohnahji, then implement a shared curation index
 for the agreed comment format, account-synced saves, and a feedback review
 queue. Add an agent backend only after defining its tools, data sources, and
