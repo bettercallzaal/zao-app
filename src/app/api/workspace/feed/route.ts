@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { readWorkspaceFeed } from '@/lib/workspace/read-feed';
+import { MAX_WORKSPACE_CURSOR_LENGTH } from '@/lib/workspace/model';
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
         Number(fid) < 1 ||
         !Number.isSafeInteger(Number(fid)))) ||
     (!hash && fid) ||
-    (token && token.length > 512)
+    (token && token.length > MAX_WORKSPACE_CURSOR_LENGTH)
   ) {
     return NextResponse.json({ error: 'Invalid cast or page token.' }, { status: 400 });
   }

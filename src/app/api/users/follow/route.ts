@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   if (!session?.signerUuid) {
     return NextResponse.json({ error: 'Signer required' }, { status: 401 });
   }
-  const signerRefusal = await guardSignerWrite(session, 'other');
+  const signerRefusal = await guardSignerWrite(session, 'follow');
   if (signerRefusal) return signerRefusal;
 
   const body = await request.json();
@@ -40,7 +40,7 @@ export async function DELETE(request: NextRequest) {
   if (!session?.signerUuid) {
     return NextResponse.json({ error: 'Signer required' }, { status: 401 });
   }
-  const signerRefusal = await guardSignerWrite(session, 'other');
+  const signerRefusal = await guardSignerWrite(session, 'unfollow');
   if (signerRefusal) return signerRefusal;
 
   const body = await request.json();

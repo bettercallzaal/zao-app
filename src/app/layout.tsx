@@ -9,6 +9,7 @@ import { MiniAppReady } from '@/components/miniapp/MiniAppReady';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 import { Providers } from './providers';
 import { THEME_BOOTSTRAP } from '@/lib/theme-bootstrap';
+import {publicAppOrigin} from '@/lib/app-origin';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -16,16 +17,17 @@ const inter = Inter({
   display: 'swap',
 });
 
+const APP_ORIGIN = publicAppOrigin();
 const miniAppEmbed = JSON.stringify({
   version: '1',
-  imageUrl: 'https://zaoos.com/og',
+  imageUrl: `${APP_ORIGIN}/og`,
   button: {
     title: 'Open The ZAO app',
     action: {
       type: 'launch_miniapp',
-      url: 'https://zaoos.com/miniapp',
+      url: `${APP_ORIGIN}/miniapp`,
       name: 'The ZAO app',
-      splashImageUrl: 'https://zaoos.com/splash.png',
+      splashImageUrl: `${APP_ORIGIN}/splash.png`,
       splashBackgroundColor: '#0a1628',
     },
   },
@@ -35,7 +37,7 @@ const SITE_DESCRIPTION =
   "The ZAO app: The ZAO's feed and song player, built on Farcaster. The ZAO is a decentralized impact network that returns profit margin, data and IP rights to artists, starting with music.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://zaoos.com'),
+  metadataBase: new URL(APP_ORIGIN),
   title: { default: 'The ZAO app', template: '%s · The ZAO app' },
   description: SITE_DESCRIPTION,
   applicationName: 'The ZAO app',
@@ -56,7 +58,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'The ZAO app',
     description: SITE_DESCRIPTION,
-    url: 'https://zaoos.com',
+    url: APP_ORIGIN,
     siteName: 'The ZAO app',
     type: 'website',
   },

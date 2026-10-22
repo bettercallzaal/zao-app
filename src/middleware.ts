@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { rateLimit } from '@/lib/rate-limit';
+import {allowsBrowserMutation} from '@/lib/auth/request-origin';
 
 const MINUTE = 60_000;
 
@@ -11,6 +12,8 @@ interface RateLimitConfig {
 // Rate limit configs ordered from most-specific to least-specific prefix.
 // The first matching prefix wins, so sub-routes must appear before their parent.
 const RATE_LIMITS: [string, RateLimitConfig][] = [
+  ['/api/miniapp/auth-context', {limit:10,windowMs:MINUTE}],
+  ['/api/miniapp/auth', {limit:10,windowMs:MINUTE}],
   ['/api/workspace', { limit: 30, windowMs: MINUTE }],
   // Chat sub-routes (before /api/chat catch-all paths)
   ['/api/chat/send', { limit: 10, windowMs: MINUTE }],
@@ -84,6 +87,9 @@ function addSecurityHeaders(
   nonce?: string,
   _pathname?: string,
 ): NextResponse {
+  if (_pathname?.startsWith('/api/') && !_pathname.startsWith('/api/workspace/')) {
+    response.headers.set('Cache-Control', 'private, no-store');
+  }
   // Intentionally NOT setting X-Frame-Options. Modern browsers honor the CSP
   // `frame-ancestors *` directive above, which allows the miniapp to be
   // embedded by any Farcaster client iframe. Setting XFO would override the
@@ -105,6 +111,9 @@ function addSecurityHeaders(
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (!allowsBrowserMutation(request, process.env.NEXT_PUBLIC_APP_URL)) {
+    return addSecurityHeaders(NextResponse.json({error:'Cross-origin write refused'}, {status:403}), undefined, pathname);
+  }
 
   // ZAOstock spinout: redirect /stock/* and /api/stock/* to zaostock.com
   // Project graduated 2026-04-29. Live at https://zaostock.com.

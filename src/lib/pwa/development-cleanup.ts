@@ -1,3 +1,5 @@
+import { clearZaoOfflineCaches } from './clear-caches';
+
 /** Remove only this app's worker/caches, preserving localStorage and other apps. */
 export async function removeDevelopmentWorkers(
   serviceWorker: ServiceWorkerContainer,
@@ -13,11 +15,6 @@ export async function removeDevelopmentWorkers(
     }),
   );
   const removed = await Promise.all(own.map((registration) => registration.unregister()));
-  if (cacheStorage) {
-    const keys = await cacheStorage.keys();
-    await Promise.all(
-      keys.filter((key) => key.startsWith('zaoos-')).map((key) => cacheStorage.delete(key)),
-    );
-  }
+  await clearZaoOfflineCaches(cacheStorage);
   return removed.some(Boolean);
 }

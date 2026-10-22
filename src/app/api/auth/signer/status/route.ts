@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSession, getSessionData } from '@/lib/auth/session';
 import { getSignerStatus } from '@/lib/farcaster/neynar';
+import { parseSignerStatus } from '@/lib/farcaster/signer-status';
 import { logger } from '@/lib/logger';
 
 export async function GET(req: NextRequest) {
@@ -15,10 +16,14 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const status = await getSignerStatus(signerUuid);
+    const status = parseSignerStatus(await getSignerStatus(signerUuid), signerUuid);
+    if (!status) return NextResponse.json({ error: 'Invalid signer response' }, { status: 502 });
 
     // Verify the signer belongs to the current user whenever FID is available
-    if (status.fid && status.fid !== sessionData.fid) {
+    if (
+      (status.fid !== undefined && status.fid !== sessionData.fid) ||
+      (status.status === 'approved' && status.fid !== sessionData.fid)
+    ) {
       return NextResponse.json({ error: 'Signer does not belong to this user' }, { status: 403 });
     }
 

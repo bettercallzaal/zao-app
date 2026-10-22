@@ -9,6 +9,9 @@ export interface WorkspacePost {
   embeds: string[];
 }
 
+// Live Hypersnap v2 cursors can exceed 890 characters across shards.
+export const MAX_WORKSPACE_CURSOR_LENGTH = 4096;
+
 export interface WorkspaceFeed {
   posts: WorkspacePost[];
   source: string;
@@ -26,7 +29,8 @@ export function isWorkspaceFeed(value: unknown): value is WorkspaceFeed {
     typeof feed.checkedAt === 'string' &&
     Number.isFinite(Date.parse(feed.checkedAt)) &&
     (feed.nextPageToken === null ||
-      (typeof feed.nextPageToken === 'string' && feed.nextPageToken.length <= 512))
+      (typeof feed.nextPageToken === 'string' &&
+        feed.nextPageToken.length <= MAX_WORKSPACE_CURSOR_LENGTH))
   );
 }
 

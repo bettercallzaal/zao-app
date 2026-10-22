@@ -351,9 +351,10 @@ export async function registerSignedKey(
 }
 
 export async function getSignerStatus(signerUuid: string) {
-  const res = await fetch(`${NEYNAR_BASE}/signer?signer_uuid=${signerUuid}`, {
+  const res = await fetch(`${NEYNAR_BASE}/signer?${new URLSearchParams({signer_uuid: signerUuid})}`, {
     headers: headers(),
-    signal: AbortSignal.timeout(10000),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(3000),
   });
   if (!res.ok) throw new Error(`Neynar signer status error: ${res.status}`);
   return res.json();

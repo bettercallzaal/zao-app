@@ -1,18 +1,7 @@
 /**
- * Miniapp context-based auth — silent (no SIWF signature prompt).
- *
- * Reads FID from request body (provided by client via sdk.context.user.fid).
- * Trust model: the FID claim is UNSIGNED. A non-Farcaster caller could POST
- * any allowlisted FID and obtain a session for that user. Acceptable for
- * gating an invite-only community where the alternative is a SIWF prompt
- * every miniapp launch. For sensitive ops, keep using /api/miniapp/auth
- * (QuickAuth/JWT-verified).
- *
- * HARDENED 2026-06: this path NEVER grants isAdmin (saveSession allowAdmin:false)
- * because the FID is unsigned. Admin only comes from the JWT-verified sibling.
- * TODO: consolidate both routes onto QuickAuth JWT (sdk.quickAuth.fetch) to also
- * close the unsigned-FID account-impersonation surface — needs a real
- * miniapp-launch test before flipping the client.
+ * Unsigned Mini App context lookup, for display and compatibility only.
+ * A supplied FID never creates a member/admin session or signer binding.
+ * Authenticated entry uses /api/miniapp/auth with a server-verified QuickAuth JWT.
  */
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';

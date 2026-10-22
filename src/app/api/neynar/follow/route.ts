@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     if (!session?.signerUuid) {
       return NextResponse.json({ error: 'Unauthorized — no signer' }, { status: 401 });
     }
-    const signerRefusal = await guardSignerWrite(session, 'other');
+    const signerRefusal = await guardSignerWrite(session, 'follow');
     if (signerRefusal) return signerRefusal;
 
     const body = await req.json();

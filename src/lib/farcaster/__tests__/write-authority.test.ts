@@ -39,10 +39,16 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.clearAllMocks();
+  vi.unstubAllEnvs();
   delete process.env.FARCASTER_WRITE_SIGNER_CHECK;
 });
 
 describe('writeSignerCheckEnabled - default off', () => {
+  it('cannot disable the authority check in production', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('FARCASTER_WRITE_SIGNER_CHECK', '0');
+    expect(writeSignerCheckEnabled()).toBe(true);
+  });
   it.each([
     [undefined, false],
     ['', false],
@@ -85,6 +91,8 @@ describe('checkWriteAuthority', () => {
     ['PUBLISH_CAST for a cast', 'cast', ['PUBLISH_CAST']],
     ['DELETE_CAST for a delete', 'delete-cast', ['DELETE_CAST']],
     ['PUBLISH_REACTION for a like', 'reaction', ['PUBLISH_REACTION']],
+    ['FOLLOW_USER for a follow', 'follow', ['FOLLOW_USER']],
+    ['UNFOLLOW_USER for an unfollow', 'unfollow', ['UNFOLLOW_USER']],
   ] as const)('allows a scoped signer with %s', async (_name, action, permissions) => {
     expect(
       await checkWriteAuthority(

@@ -5,7 +5,10 @@ import { logger } from '@/lib/logger';
 export async function POST() {
   try {
     await clearSession();
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { success: true },
+      { headers: { 'Cache-Control': 'private, no-store', 'Clear-Site-Data': '"cache"' } },
+    );
   } catch (error) {
     logger.error('Logout error:', error);
     return NextResponse.json({ error: 'Failed to logout' }, { status: 500 });

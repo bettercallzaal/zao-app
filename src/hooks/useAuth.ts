@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { SessionData } from '@/types';
+import { endBrowserSession } from '@/lib/auth/client-logout';
 
 export function useAuth() {
   const [user, setUser] = useState<SessionData | null>(null);
@@ -32,7 +33,12 @@ export function useAuth() {
   }, [fetchSession]);
 
   const logout = useCallback(async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    try {
+      await endBrowserSession();
+    } catch {
+      window.alert('Sign out failed. Please try again.');
+      return;
+    }
     setUser(null);
     window.location.href = '/';
   }, []);

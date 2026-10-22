@@ -1,4 +1,7 @@
 import type { WorkspaceFeed, WorkspacePost } from './model';
+import { MAX_WORKSPACE_CURSOR_LENGTH } from './model';
+import { readNodeJson as readNode } from './node-json';
+import { readChannelFeed } from './read-channel';
 
 interface NodeMessage {
   hash: string;
@@ -29,36 +32,7 @@ function isNodeMessage(value: unknown): value is NodeMessage {
 
 const cache = new Map<string, { expires: number; value: WorkspaceFeed }>();
 
-async function readNode(base: string, path: string, signal: AbortSignal) {
-  const response = await fetch(`${base}${path}`, {
-    signal,
-    cache: 'no-store',
-  });
-  if (!response.ok) throw new Error('Community node unavailable');
-  // Enforce the size limit while streaming, before allocating an entire response.
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error('Empty node response');
-  const decoder = new TextDecoder();
-  let body = '';
-  let bytes = 0;
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      bytes += value.byteLength;
-      if (bytes > 4_000_000) {
-        await reader.cancel();
-        throw new Error('Node response too large');
-      }
-      body += decoder.decode(value, { stream: true });
-    }
-    return JSON.parse(body + decoder.decode());
-  } finally {
-    reader.releaseLock();
-  }
-}
-
-export async function readWorkspaceFeed(
+export async function readRawWorkspaceFeed(
   options: { fid?: number; hash?: string; token?: string } = {},
 ): Promise<WorkspaceFeed> {
   // Server-controlled only. A caller cannot turn this route into an arbitrary URL proxy.
@@ -86,10 +60,13 @@ export async function readWorkspaceFeed(
   // One budget for feed + all profile batches, below Vercel's 10-second limit.
   const signal = AbortSignal.timeout(7000);
   const data = await readNode(base, path, signal);
-  if (!Array.isArray(data.messages)) throw new Error('Invalid community feed');
-  const messages = data.messages.slice(0, 12).filter(isNodeMessage) as NodeMessage[];
+  if (!Array.isArray(data.messages) || data.messages.length > 96)
+    throw new Error('Invalid community feed');
+  const messages = (data.messages.filter(isNodeMessage) as NodeMessage[]).sort(
+    (a, b) => b.data.timestamp - a.data.timestamp,
+  );
   const users = new Map<number, { username: string; name: string; avatar: string }>();
-  const ids = [...new Set(messages.map((m) => m.data.fid))];
+  const ids = [...new Set(messages.map((m) => m.data.fid))].slice(0, 24);
   // Four profile requests at a time. One missing profile must not erase the feed.
   for (let i = 0; i < ids.length; i += 4) {
     await Promise.all(
@@ -134,11 +111,18 @@ export async function readWorkspaceFeed(
     source: process.env.ZAO_WORKSPACE_NODE_URL ? "ZAO's Hypersnap node" : 'Public Hypersnap node',
     checkedAt: new Date().toISOString(),
     nextPageToken:
-      typeof data.nextPageToken === 'string' && data.nextPageToken.length <= 512
+      typeof data.nextPageToken === 'string' &&
+      data.nextPageToken.length <= MAX_WORKSPACE_CURSOR_LENGTH
         ? data.nextPageToken
         : null,
   };
   if (cache.size >= 32) cache.delete(cache.keys().next().value!);
   cache.set(key, { value: result, expires: Date.now() + 20_000 });
   return result;
+}
+
+export async function readWorkspaceFeed(
+  options: { fid?: number; hash?: string; token?: string } = {},
+): Promise<WorkspaceFeed> {
+  return options.hash ? readRawWorkspaceFeed(options) : readChannelFeed(options.token);
 }

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { communityConfig } from '@/../community.config';
 import { RequestAccessButton } from '@/app/not-allowed/RequestAccessButton';
 import type { Cast } from '@/types';
+import { endBrowserSession } from '@/lib/auth/client-logout';
 
 interface VisitorFeedProps {
   displayName: string;
@@ -53,8 +54,12 @@ export function VisitorFeed({ displayName, pfpUrl }: VisitorFeedProps) {
   }, [channel, load]);
 
   const signOut = useCallback(async () => {
-    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
-    router.push('/');
+    try {
+      await endBrowserSession();
+      router.push('/');
+    } catch {
+      setError('Sign out failed. Please try again.');
+    }
   }, [router]);
 
   return (

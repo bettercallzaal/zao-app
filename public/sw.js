@@ -1,13 +1,11 @@
 // The ZAO app service worker: offline support and caching
-const CACHE_NAME = 'zaoos-v3';
+const CACHE_NAME = 'zaoos-v4';
 const IS_LOOPBACK = ['localhost', '127.0.0.1', '[::1]'].includes(self.location.hostname);
 const OFFLINE_URL = '/offline';
 
-// Cap on cached page navigations + dynamically-cached assets so the SW
-// cache can't grow unboundedly and trip the browser quota. Evicts oldest
-// entries (insertion order ≈ LRU) once the limit is exceeded.
-const PAGE_CACHE_MAX_ENTRIES = 50;
-const ASSET_CACHE_MAX_ENTRIES = 100;
+// Bound immutable/offline assets and evict the oldest insertions.
+// Member pages and API responses never enter this cache.
+const ASSET_CACHE_MAX_ENTRIES = 150;
 
 async function trimCache(cacheName, maxEntries) {
   const cache = await caches.open(cacheName);
@@ -23,7 +21,6 @@ async function trimCache(cacheName, maxEntries) {
 // Note: icon-1024.png and logo.png are byte-identical; the OS fetches
 // icon-1024.png at PWA install time, so we only precache logo.png here.
 const PRECACHE_ASSETS = [
-  '/',
   '/offline',
   '/manifest.json',
   '/favicon.ico',
@@ -57,104 +54,34 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first for API, cache-first for static assets
+// Cache only immutable build assets and the explicit public offline shell.
+// Never cache API responses, authenticated documents, RSC payloads or other origins.
 self.addEventListener('fetch', (event) => {
-  // An older local registration may update before the new React cleanup runs.
-  // Never serve cached development chunks or HTML on loopback origins.
   if (IS_LOOPBACK) return;
   const { request } = event;
   const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/api/')) return;
 
-  // Skip non-GET requests
-  if (request.method !== 'GET') return;
-
-  // Skip chrome-extension, websocket, etc.
-  if (!url.protocol.startsWith('http')) return;
-
-  // API routes — network first, fall back to cache
-  if (url.pathname.startsWith('/api/')) {
-    // Only cache safe read-only API responses
-    const cacheable = ['/api/members', '/api/library', '/api/music', '/api/directory'];
-    const shouldCache = cacheable.some((prefix) => url.pathname.startsWith(prefix));
-
-    if (shouldCache) {
-      event.respondWith(
-        fetch(request)
-          .then((response) => {
-            // Clone and cache successful responses
-            if (response.ok) {
-              const clone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-            }
-            return response;
-          })
-          .catch(() => caches.match(request))
-      );
-      return;
-    }
-    // Non-cacheable API routes — just fetch, no fallback
-    return;
-  }
-
-  // Next.js internals — let them through (they have their own caching)
-  if (url.pathname.startsWith('/_next/')) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached;
-        return fetch(request).then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        });
-      })
-    );
-    return;
-  }
-
-  // Page navigations — network first, offline fallback
   if (request.mode === 'navigate') {
-    // Never cache the miniapp entry — stale HTML here means users get stuck
-    // on the native Farcaster splash because ready() lives in the new bundle.
-    const isMiniAppEntry = url.pathname === '/miniapp' || url.pathname.startsWith('/miniapp/');
-
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok && !isMiniAppEntry) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, clone).then(() =>
-                trimCache(CACHE_NAME, PAGE_CACHE_MAX_ENTRIES + ASSET_CACHE_MAX_ENTRIES)
-              );
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          if (isMiniAppEntry) return caches.match(OFFLINE_URL);
-          return caches.match(request).then((cached) => {
-            return cached || caches.match(OFFLINE_URL);
-          });
-        })
-    );
+    event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL)));
     return;
   }
 
-  // Static assets (images, fonts, css) — cache first
+  const isBuildAsset = url.pathname.startsWith('/_next/static/');
+  const isOfflineAsset = PRECACHE_ASSETS.includes(url.pathname);
+  if (!isBuildAsset && !isOfflineAsset) return;
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
-        // Cache successful static asset responses, then trim oldest if over cap
-        if (response.ok && response.type === 'basic') {
+        const policy = response.headers.get('Cache-Control') || '';
+        if (response.ok && response.type === 'basic' && !/private|no-store/i.test(policy)) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, clone).then(() =>
-              trimCache(CACHE_NAME, PAGE_CACHE_MAX_ENTRIES + ASSET_CACHE_MAX_ENTRIES)
-            );
-          });
+          event.waitUntil(caches.open(CACHE_NAME).then(async (cache) => {
+            await cache.put(request, clone);
+            await trimCache(CACHE_NAME, ASSET_CACHE_MAX_ENTRIES);
+          }));
         }
         return response;
       });

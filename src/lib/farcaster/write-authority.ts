@@ -33,19 +33,27 @@
  * UNVERIFIED; when the field is absent the action is allowed on status and FID
  * alone, and that is the first thing to confirm before switching this on.
  *
- * DEFAULT OFF. Runs only when `FARCASTER_WRITE_SIGNER_CHECK` is exactly `1`.
+ * Always enforced in production. In development, opt in with
+ * `FARCASTER_WRITE_SIGNER_CHECK=1` to exercise credentialed writes.
  * The Neynar client and the session store are imported only when the flag is
  * on, so with it off a route loads nothing it did not load before.
  */
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
+import { signerStatusSchema } from './signer-status';
 import { logger } from '@/lib/logger';
 
 export function writeSignerCheckEnabled(): boolean {
-  return process.env.FARCASTER_WRITE_SIGNER_CHECK === '1';
+  return process.env.NODE_ENV === 'production' || process.env.FARCASTER_WRITE_SIGNER_CHECK === '1';
 }
 
-export type WriteAction = 'cast' | 'delete-cast' | 'reaction' | 'delete-reaction' | 'other';
+export type WriteAction =
+  | 'cast'
+  | 'delete-cast'
+  | 'reaction'
+  | 'delete-reaction'
+  | 'follow'
+  | 'unfollow'
+  | 'other';
 
 /** Neynar SharedSignerPermission values that allow each action, besides WRITE_ALL. */
 const ACTION_PERMISSION: Record<WriteAction, string | null> = {
@@ -53,18 +61,12 @@ const ACTION_PERMISSION: Record<WriteAction, string | null> = {
   'delete-cast': 'DELETE_CAST',
   reaction: 'PUBLISH_REACTION',
   'delete-reaction': 'DELETE_REACTION',
+  follow: 'FOLLOW_USER',
+  unfollow: 'UNFOLLOW_USER',
   other: null,
 };
 
 // Shape from docs.neynar.com/reference/lookup-signer (Signer schema), fetched 2026-10-09.
-const neynarSignerSchema = z
-  .object({
-    signer_uuid: z.string(),
-    status: z.enum(['generated', 'pending_approval', 'approved', 'revoked']),
-    fid: z.number().int().optional(),
-    permissions: z.array(z.string()).optional(),
-  })
-  .passthrough();
 
 export type WriteAuthority =
   | { ok: true }
@@ -99,7 +101,7 @@ export async function checkWriteAuthority(
       reason: `lookup-failed: ${err instanceof Error ? err.message : String(err)}`,
     };
   }
-  const parsed = neynarSignerSchema.safeParse(raw);
+  const parsed = signerStatusSchema.safeParse(raw);
   if (!parsed.success)
     return { ok: false, definitive: false, reason: 'malformed-provider-response' };
   const signer = parsed.data;

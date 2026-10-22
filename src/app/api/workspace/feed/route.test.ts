@@ -10,7 +10,7 @@ describe('public workspace read route', () => {
     '?hash=bad&fid=1',
     '?fid=1',
     '?hash=0x' + 'a'.repeat(40) + '&fid=-1',
-    '?pageToken=' + 'x'.repeat(513),
+    '?pageToken=' + 'x'.repeat(4097),
   ])('rejects invalid input without calling the node: %s', async (query) => {
     vi.mocked(readWorkspaceFeed).mockClear();
     expect((await GET(new NextRequest('http://localhost/api/workspace/feed' + query))).status).toBe(
@@ -23,5 +23,18 @@ describe('public workspace read route', () => {
     const result = await GET(new NextRequest('http://localhost/api/workspace/feed'));
     expect(result.status).toBe(503);
     expect((await result.json()).error).toContain('saved posts');
+  });
+  it('accepts a measured multi-shard cursor of 890 characters', async () => {
+    vi.mocked(readWorkspaceFeed).mockResolvedValueOnce({
+      posts: [],
+      source: 'Test',
+      checkedAt: new Date().toISOString(),
+      nextPageToken: null,
+    });
+    const token = 'c'.repeat(890);
+    expect(
+      (await GET(new NextRequest('http://localhost/api/workspace/feed?pageToken=' + token))).status,
+    ).toBe(200);
+    expect(readWorkspaceFeed).toHaveBeenLastCalledWith({ hash: undefined, fid: undefined, token });
   });
 });

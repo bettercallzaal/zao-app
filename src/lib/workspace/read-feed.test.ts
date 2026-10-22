@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readWorkspaceFeed } from './read-feed';
+import { readRawWorkspaceFeed as readWorkspaceFeed } from './read-feed';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -45,7 +45,7 @@ describe('workspace node integration', () => {
     expect(fetcher.mock.calls[0][0]).toContain('/v1/castsByParent?url=https%3A%2F%2Fwarpcast.com');
   });
 
-  it('skips malformed casts and bounds profile fan-out to the requested page size', async () => {
+  it('preserves multi-shard rows while bounding profile fan-out', async () => {
     vi.stubEnv('ZAO_WORKSPACE_NODE_URL', 'https://malformed.test');
     const valid = (fid: number) => ({
       hash: `0x${String(fid).padStart(40, 'a')}`,
@@ -63,8 +63,8 @@ describe('workspace node integration', () => {
     );
     vi.stubGlobal('fetch', fetcher);
     const feed = await readWorkspaceFeed();
-    expect(feed.posts).toHaveLength(9);
-    expect(fetcher).toHaveBeenCalledTimes(10);
+    expect(feed.posts).toHaveLength(30);
+    expect(fetcher).toHaveBeenCalledTimes(25);
   });
 
   it('returns casts when the shared profile deadline expires', async () => {

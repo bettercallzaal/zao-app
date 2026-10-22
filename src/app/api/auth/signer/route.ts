@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { optimism } from 'viem/chains';
-import { getSessionData } from '@/lib/auth/session';
+import { getSession, getSessionData } from '@/lib/auth/session';
 import { ENV } from '@/lib/env';
-import { createSigner, registerSignedKey } from '@/lib/farcaster/neynar';
+import { createSigner, registerSignedKey, getSignerStatus } from '@/lib/farcaster/neynar';
+import { parseSignerStatus } from '@/lib/farcaster/signer-status';
 import { logger } from '@/lib/logger';
 
 // SECURITY: This uses the APP's signer wallet (APP_SIGNER_PRIVATE_KEY),
@@ -22,9 +23,28 @@ export async function POST() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // If user already has an approved signer, return it
+  // A saved cookie is not evidence of current approval or account ownership.
   if (sessionData.signerUuid) {
-    return NextResponse.json({ signerUuid: sessionData.signerUuid, status: 'approved' });
+    try {
+      const status = parseSignerStatus(
+        await getSignerStatus(sessionData.signerUuid),
+        sessionData.signerUuid,
+      );
+      if (!status) return NextResponse.json({ error: 'Could not verify signer' }, { status: 503 });
+      if (status.status === 'approved' && status.fid === sessionData.fid) {
+        return NextResponse.json({ signerUuid: status.signer_uuid, status: status.status });
+      }
+      const session = await getSession();
+      session.signerUuid = null;
+      await session.save();
+      return NextResponse.json(
+        { error: 'Signer is no longer approved for this account. Please reconnect.' },
+        { status: 403 },
+      );
+    } catch {
+      // Provider failure is not proof of revocation; retain the binding.
+      return NextResponse.json({ error: 'Could not verify signer. Try again.' }, { status: 503 });
+    }
   }
 
   try {

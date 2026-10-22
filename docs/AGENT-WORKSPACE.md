@@ -10,11 +10,15 @@ curation and feedback drafts.
 ```powershell
 npm ci
 $env:ZAO_WORKSPACE_NODE_URL = 'http://127.0.0.1:3381'
+$env:ZAO_WORKSPACE_FEED_NODE_URL = 'https://haatz.quilibrium.com'
 npm run dev -- --hostname 127.0.0.1 --port 3100
 ```
 
-Open <http://127.0.0.1:3100/workspace>. The node override is optional: without
-it the workspace uses `https://haatz.quilibrium.com`. A deployed preview must
+Open <http://127.0.0.1:3100/workspace>. The enriched v2 channel API and raw
+thread node can be selected independently. Both overrides are optional; without
+them the workspace uses `https://haatz.quilibrium.com`. The separate public
+feed override avoids an observed listing/index issue in the older local node.
+A deployed preview must
 use a node URL reachable from its server; localhost on Vercel is not your PC.
 Never expose the node's administrative interfaces to make this work.
 
@@ -44,7 +48,9 @@ This is a command-driven workspace, not an LLM agent yet. It does not generate
 AI summaries, run arbitrary tools, or publish on behalf of an operator signer.
 The public read endpoint accepts only bounded feed, pagination, and thread
 parameters against a server-configured node. It does not accept target URLs.
-Production rate limiting uses the app's existing Upstash configuration.
+Production rate limiting uses the app's existing Upstash configuration. Signer
+authority checks are always enforced for production writes; browser mutations
+also require a trusted origin. Mini App member sessions use verified QuickAuth.
 
 Curation and feedback markers are a proposed convention, not a shared index.
 There is no aggregation service or moderation queue for them yet. Music links
@@ -89,6 +95,18 @@ while preserving browser saves and drafts. The temporary blocking-metadata
 workaround was removed; Next.js uses its default metadata streaming behavior.
 
 ### Community testing
+
+Run `npm run diagnose:workspace` to compare node heights, raw/enriched listings,
+cursor lengths, and exact cast read-back. Run `npm run check:deployment` to
+check missing/invalid configuration names without printing secret values.
+The latter intentionally fails for local-only URLs and missing production keys.
+
+See [the research report](HYPERSNAP-CLIENT-RESEARCH-2026-10-22.md) for measured
+source differences, pinned client examples, and the implementation decisions.
+
+The production service worker caches only build assets and the public offline
+shell. Member HTML, API responses, and React Server Component payloads are
+network-only. Device-local workspace saves and drafts survive logout.
 
 Collect feedback from Zaal and Ohnahji, then implement a shared curation index
 for the agreed comment format, account-synced saves, and a feedback review
