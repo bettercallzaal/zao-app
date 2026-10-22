@@ -105,4 +105,60 @@ describe('agent-first workspace', () => {
       ).searchParams.get('parentCastHash'),
     ).toBe(post.hash);
   });
+
+  it('protects the existing draft and reply target until replacement is chosen', async () => {
+    localStorage.setItem(
+      'zao-workspace-v1',
+      JSON.stringify({ castText: 'My unfinished reply', parent: post }),
+    );
+    render(<AgentWorkspace />);
+    await screen.findByText(post.text);
+    fireEvent.click(screen.getAllByRole('button', { name: /Give feedback/ })[0]);
+    expect(screen.getByLabelText('Cast draft')).toHaveValue('My unfinished reply');
+    expect(screen.getByText(/Replying to @artist/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep current draft' }));
+    expect(screen.queryByRole('button', { name: 'Replace draft' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: /Give feedback/ })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Replace draft' }));
+    expect(screen.getByLabelText('Cast draft')).toHaveValue('!zao-feedback idea — ');
+    expect(screen.queryByText(/Replying to @artist/)).not.toBeInTheDocument();
+  });
+
+  it('refuses a 201st save instead of silently losing it on reload', async () => {
+    const saved = Array.from({ length: 200 }, (_, i) => ({
+      ...post,
+      hash: `0x${i.toString(16).padStart(40, '0')}`,
+    }));
+    localStorage.setItem('zao-workspace-v1', JSON.stringify({ saved }));
+    render(<AgentWorkspace />);
+    await screen.findByText(post.text);
+    fireEvent.click(screen.getByRole('button', { name: '☆ Save' }));
+    expect(screen.getByRole('status')).toHaveTextContent('200 saved posts');
+    const persisted = JSON.parse(localStorage.getItem('zao-workspace-v1')!);
+    expect(persisted.saved).toHaveLength(200);
+    expect(persisted.saved.map((p: typeof post) => p.hash)).toEqual(saved.map((p) => p.hash));
+  });
+
+  it('handles malformed replies without crashing the workspace', async () => {
+    render(<AgentWorkspace />);
+    await screen.findByText(post.text);
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ posts: [null] }),
+    } as Response);
+    fireEvent.click(screen.getByRole('button', { name: 'Review conversation' }));
+    await screen.findByText(/Replies could not be loaded/);
+    expect(screen.getByRole('link', { name: /Open original/ })).toBeInTheDocument();
+  });
+
+  it('does not offer a connection retry for a draft validation error and names the dialog', async () => {
+    render(<AgentWorkspace />);
+    await screen.findByText(post.text);
+    fireEvent.click(screen.getByRole('button', { name: '↗ Cast' }));
+    fireEvent.click(screen.getByRole('button', { name: /Preview cast/ }));
+    expect(screen.queryByRole('button', { name: 'Retry connection' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Cast draft'), { target: { value: 'A complete note' } });
+    fireEvent.click(screen.getByRole('button', { name: /Preview cast/ }));
+    expect(screen.getByRole('dialog', { name: 'One last look.' })).toBeInTheDocument();
+  });
 });

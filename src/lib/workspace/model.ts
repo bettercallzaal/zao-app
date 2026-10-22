@@ -16,6 +16,20 @@ export interface WorkspaceFeed {
   nextPageToken: string | null;
 }
 
+export function isWorkspaceFeed(value: unknown): value is WorkspaceFeed {
+  if (!value || typeof value !== 'object') return false;
+  const feed = value as Partial<WorkspaceFeed>;
+  return (
+    Array.isArray(feed.posts) &&
+    feed.posts.every(isWorkspacePost) &&
+    typeof feed.source === 'string' &&
+    typeof feed.checkedAt === 'string' &&
+    Number.isFinite(Date.parse(feed.checkedAt)) &&
+    (feed.nextPageToken === null ||
+      (typeof feed.nextPageToken === 'string' && feed.nextPageToken.length <= 512))
+  );
+}
+
 export function isWorkspacePost(value: unknown): value is WorkspacePost {
   if (!value || typeof value !== 'object') return false;
   const post = value as Partial<WorkspacePost>;
@@ -98,10 +112,25 @@ export function safePublicUrl(value: string): string | null {
 export function musicLinks(post: WorkspacePost): string[] {
   const links = [...post.embeds, ...(post.text.match(/https?:\/\/[^\s<>]+/g) || [])];
   return [...new Set(links.map(safePublicUrl).filter((url): url is string => !!url))].filter(
-    (url) =>
-      /spotify\.com|soundcloud\.com|audius\.co|bandcamp\.com|youtube\.com|youtu\.be|sound\.xyz|music\.apple\.com|tidal\.com|\.(mp3|wav|ogg)(\?|$)/i.test(
-        url,
-      ),
+    (url) => {
+      const parsed = new URL(url);
+      const platforms = [
+        'spotify.com',
+        'soundcloud.com',
+        'audius.co',
+        'bandcamp.com',
+        'youtube.com',
+        'youtu.be',
+        'sound.xyz',
+        'music.apple.com',
+        'tidal.com',
+      ];
+      return (
+        platforms.some(
+          (host) => parsed.hostname === host || parsed.hostname.endsWith(`.${host}`),
+        ) || /\.(mp3|wav|ogg)$/i.test(parsed.pathname)
+      );
+    },
   );
 }
 

@@ -1,15 +1,12 @@
 import type { NextConfig } from "next";
 import bundleAnalyzer from "@next/bundle-analyzer";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
 const nextConfig: NextConfig = {
-  // Avoid the metadata streaming boundary hydration mismatch in Next 16.4.
-  // Resolve metadata before the shell; dynamic metadata may delay first byte.
-  htmlLimitedBots: /.*/,
   async redirects() {
     return [
       {

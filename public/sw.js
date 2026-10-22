@@ -1,5 +1,6 @@
 // The ZAO app service worker: offline support and caching
-const CACHE_NAME = 'zaoos-v2';
+const CACHE_NAME = 'zaoos-v3';
+const IS_LOOPBACK = ['localhost', '127.0.0.1', '[::1]'].includes(self.location.hostname);
 const OFFLINE_URL = '/offline';
 
 // Cap on cached page navigations + dynamically-cached assets so the SW
@@ -33,7 +34,7 @@ const PRECACHE_ASSETS = [
 // Install: pre-cache essential assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    IS_LOOPBACK ? Promise.resolve() : caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS);
     })
   );
@@ -47,7 +48,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME)
+          .filter((key) => key.startsWith('zaoos-') && (IS_LOOPBACK || key !== CACHE_NAME))
           .map((key) => caches.delete(key))
       )
     )
@@ -58,6 +59,9 @@ self.addEventListener('activate', (event) => {
 
 // Fetch: network-first for API, cache-first for static assets
 self.addEventListener('fetch', (event) => {
+  // An older local registration may update before the new React cleanup runs.
+  // Never serve cached development chunks or HTML on loopback origins.
+  if (IS_LOOPBACK) return;
   const { request } = event;
   const url = new URL(request.url);
 

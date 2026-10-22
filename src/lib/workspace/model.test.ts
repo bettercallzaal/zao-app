@@ -3,6 +3,7 @@ import {
   composeUrl,
   filterWorkspacePosts,
   musicLinks,
+  isWorkspaceFeed,
   parseWorkspaceCommand,
   type WorkspacePost,
 } from './model';
@@ -39,5 +40,34 @@ describe('workspace command boundary', () => {
     expect(url.origin).toBe('https://farcaster.xyz');
     expect(url.searchParams.get('text')).toBe('!zao music — keep & share');
     expect(url.searchParams.get('parentCastHash')).toBe(post.hash);
+  });
+  it('matches music hosts rather than platform names anywhere in the URL', () => {
+    expect(
+      musicLinks({
+        ...post,
+        text: '',
+        embeds: [
+          'https://spotify.com.evil.example/track',
+          'https://evil.example/?next=https://soundcloud.com/song',
+          'https://artist.bandcamp.com/album/music',
+          'https://cdn.example/song.mp3?download=1',
+        ],
+      }),
+    ).toEqual([
+      'https://artist.bandcamp.com/album/music',
+      'https://cdn.example/song.mp3?download=1',
+    ]);
+  });
+  it('rejects malformed feed metadata and conversation rows before rendering', () => {
+    const feed = {
+      posts: [post],
+      source: 'Node',
+      checkedAt: '2026-10-22T10:00:00Z',
+      nextPageToken: null,
+    };
+    expect(isWorkspaceFeed(feed)).toBe(true);
+    expect(isWorkspaceFeed({ ...feed, checkedAt: 'bad' })).toBe(false);
+    expect(isWorkspaceFeed({ ...feed, posts: [null] })).toBe(false);
+    expect(isWorkspaceFeed({ ...feed, nextPageToken: { bad: true } })).toBe(false);
   });
 });

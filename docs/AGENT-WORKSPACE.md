@@ -83,10 +83,10 @@ next-themes provider still manages theme changes, but its duplicate script is
 an inert custom data block so React can remount it without the executable-script
 warning. Five additional tests cover startup preferences and client remounts.
 
-`next.config.ts` uses blocking metadata (`htmlLimitedBots: /.*/`) as a workaround
-for the reported metadata boundary hydration mismatch. Dynamic metadata must
-finish before the HTML shell, which can increase time to first byte. Revisit
-this workaround after verifying an upstream fix with the affected browser.
+The audit found that old local service workers could mix cached development
+JavaScript with fresh HTML. Development now removes ZAO's worker and its caches
+while preserving browser saves and drafts. The temporary blocking-metadata
+workaround was removed; Next.js uses its default metadata streaming behavior.
 
 ### Community testing
 

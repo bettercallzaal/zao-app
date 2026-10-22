@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { removeDevelopmentWorkers } from '@/lib/pwa/development-cleanup';
 
 /**
  * Registers the service worker on mount.
@@ -22,9 +23,22 @@ import { useEffect } from 'react';
  */
 export function ServiceWorkerRegistration() {
   useEffect(() => {
-    // A dev worker would precache stale routes and hide edits during local testing.
-    if (process.env.NODE_ENV !== 'production') return;
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+    // Old registrations survive code changes. Their cache-first dev chunks can
+    // mismatch fresh server HTML even after a hard refresh.
+    if (process.env.NODE_ENV !== 'production') {
+      const controller = navigator.serviceWorker.controller;
+      const ownedController =
+        controller &&
+        new URL(controller.scriptURL).origin === window.location.origin &&
+        new URL(controller.scriptURL).pathname === '/sw.js';
+      void removeDevelopmentWorkers(navigator.serviceWorker, window.caches, window.location.origin)
+        .then((removed) => {
+          if (removed && ownedController) window.location.reload();
+        })
+        .catch((error) => console.warn('[SW] Development cleanup failed:', error));
+      return;
+    }
 
     let updateInterval: ReturnType<typeof setInterval> | undefined;
     let cancelled = false;

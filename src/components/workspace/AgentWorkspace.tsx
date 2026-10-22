@@ -7,6 +7,7 @@ import {
   composeUrl,
   filterWorkspacePosts,
   isWorkspacePost,
+  isWorkspaceFeed,
   musicLinks,
   parseWorkspaceCommand,
   type CommandId,
@@ -30,6 +31,11 @@ export function AgentWorkspace() {
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [feedError, setFeedError] = useState('');
+  const [pendingDraft, setPendingDraft] = useState<{
+    text: string;
+    target: WorkspacePost | null;
+  } | null>(null);
   const [notice, setNotice] = useState('');
   const [selected, setSelected] = useState<WorkspacePost | null>(null);
   const [parent, setParent] = useState<WorkspacePost | null>(null);
@@ -45,9 +51,18 @@ export function AgentWorkspace() {
   useEffect(() => {
     try {
       const data = JSON.parse(localStorage.getItem(STORAGE) || '{}');
-      if (Array.isArray(data.saved)) setSaved(data.saved.filter(isWorkspacePost).slice(0, 200));
+      if (Array.isArray(data.saved))
+        setSaved([
+          ...new Map(
+            data.saved.filter(isWorkspacePost).map((p: WorkspacePost) => [p.hash, p]),
+          ).values(),
+        ] as WorkspacePost[]);
       if (Array.isArray(data.favorites))
-        setFavorites(data.favorites.filter((id: CommandId) => COMMANDS.some((c) => c.id === id)));
+        setFavorites([
+          ...new Set<CommandId>(
+            data.favorites.filter((id: CommandId) => COMMANDS.some((c) => c.id === id)),
+          ),
+        ]);
       if (typeof data.castText === 'string') setCastText(data.castText);
       if (isWorkspacePost(data.parent)) setParent(data.parent);
     } catch {
@@ -80,15 +95,14 @@ export function AgentWorkspace() {
     const current = new AbortController();
     controller.current = current;
     setBusy(true);
-    setError('');
+    setFeedError('');
     try {
       const token =
         more && feed?.nextPageToken ? `?pageToken=${encodeURIComponent(feed.nextPageToken)}` : '';
       const response = await fetch(`/api/workspace/feed${token}`, { signal: current.signal });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Could not read the community.');
-      if (!Array.isArray(data.posts) || !data.posts.every(isWorkspacePost))
-        throw new Error('The community response could not be read.');
+      if (!isWorkspaceFeed(data)) throw new Error('The community response could not be read.');
       if (!current.signal.aborted)
         setFeed((old) => ({
           ...data,
@@ -99,7 +113,7 @@ export function AgentWorkspace() {
         }));
     } catch (failure) {
       if (!current.signal.aborted)
-        setError(
+        setFeedError(
           failure instanceof Error ? failure.message : 'The community connection is unavailable.',
         );
     } finally {
@@ -108,8 +122,19 @@ export function AgentWorkspace() {
   }
 
   function draft(text: string, target: WorkspacePost | null = null) {
+    if (castText.trim() && (castText !== text || parent?.hash !== target?.hash)) {
+      setPendingDraft({ text, target });
+      setMode('cast');
+      return;
+    }
+    replaceDraft(text, target);
+  }
+
+  function replaceDraft(text: string, target: WorkspacePost | null) {
     setCastText(text);
     setParent(target);
+    setPendingDraft(null);
+    setError('');
     setMode('cast');
     setNotice('Draft only. Review it before opening Farcaster.');
     input.current?.focus();
@@ -147,6 +172,12 @@ export function AgentWorkspace() {
 
   function toggleSave(post: WorkspacePost) {
     const exists = saved.some((p) => p.hash === post.hash);
+    if (!exists && saved.length >= 200) {
+      setNotice(
+        'You have 200 saved posts. Remove a saved post before adding another. Your existing saves are preserved.',
+      );
+      return;
+    }
     setSaved((old) => (exists ? old.filter((p) => p.hash !== post.hash) : [post, ...old]));
     setNotice(
       exists ? 'Removed from your saved posts.' : 'Saved on this device. Nothing was posted.',
@@ -167,6 +198,7 @@ export function AgentWorkspace() {
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
+      if (!isWorkspaceFeed(data)) throw new Error('Invalid conversation response');
       if (!current.signal.aborted) {
         setThread(data);
         setThreadState(data.posts.length ? '' : 'No replies found in this node’s current data.');
@@ -234,6 +266,7 @@ export function AgentWorkspace() {
   const activeCommand = COMMANDS.find((c) => c.id === active)!;
   const bytes = new TextEncoder().encode(castText).length;
   const isPinned = favorites.includes(active);
+  const newestPost = feed?.posts.length ? Math.max(...feed.posts.map((p) => p.timestamp)) : null;
 
   return (
     <div className={styles.workspace}>
@@ -413,6 +446,20 @@ export function AgentWorkspace() {
             </button>
           </div>
         </form>
+        {pendingDraft && (
+          <div className={styles.error} role="alert">
+            You already have a cast draft. Replace it with the new draft?
+            <button
+              type="button"
+              onClick={() => replaceDraft(pendingDraft.text, pendingDraft.target)}
+            >
+              Replace draft
+            </button>
+            <button type="button" onClick={() => setPendingDraft(null)}>
+              Keep current draft
+            </button>
+          </div>
+        )}
         <div className={styles.suggestions}>
           {COMMANDS.filter((c) => ['review', 'music', 'feedback'].includes(c.id)).map((c) => (
             <button type="button" key={c.id} onClick={() => run(c.prompt)}>
@@ -428,6 +475,11 @@ export function AgentWorkspace() {
         {error && (
           <div className={styles.error} role="alert">
             {error}
+          </div>
+        )}
+        {feedError && (
+          <div className={styles.error} role="alert">
+            {feedError}
             <button type="button" onClick={() => loadFeed()}>
               Retry connection
             </button>
@@ -466,6 +518,17 @@ export function AgentWorkspace() {
                 ? `${feed.source} · checked ${new Date(feed.checkedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${feed.posts.length} loaded posts`
                 : 'Reading public community posts…'}
           </p>
+          {active !== 'saved' && newestPost !== null && (
+            <p className={styles.source}>
+              Newest loaded post:{' '}
+              {new Date(newestPost).toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })}
+              . Node data may not include every Farcaster post.
+            </p>
+          )}
           <div className={styles.resultLayout}>
             <div className={styles.postList}>
               {!posts.length && (
@@ -607,6 +670,7 @@ export function AgentWorkspace() {
 
       <dialog
         ref={dialog}
+        aria-labelledby="cast-preview-title"
         className={styles.previewDialog}
         onCancel={() => setPreview(false)}
         onClick={(event) => {
@@ -619,7 +683,7 @@ export function AgentWorkspace() {
             ×
           </button>
         </div>
-        <h2>One last look.</h2>
+        <h2 id="cast-preview-title">One last look.</h2>
         <p className={styles.source}>
           You will choose your account and publish in your Farcaster client.
         </p>
@@ -662,6 +726,11 @@ export function AgentWorkspace() {
         <p className={styles.source}>
           Opening a composer is not a confirmed post. Nothing is automatically sent.
         </p>
+        {notice && (
+          <p className={styles.notice} role="status">
+            {notice}
+          </p>
+        )}
       </dialog>
     </div>
   );
