@@ -1,6 +1,6 @@
 # ZAO Client: a client of clients
 
-Reviewed October 22, 2026. This batch changes `/` and `/workspace` into a public application directory. The earlier community reader remains at `/workspace/review`; the read API and `/developers` remain available. Directory use needs no wallet, login, or node connection. The full app's deployment requirements remain separate.
+Reviewed October 22–23, 2026. This batch changes `/` and `/workspace` into a public application directory. The earlier community reader remains at `/workspace/review`; the read API and `/developers` remain available. Directory use needs no wallet, login, or node connection. The full app's deployment requirements remain separate.
 
 ## Research approach
 
@@ -20,7 +20,16 @@ The checked-in catalog is [catalog.ts](../src/lib/directory/catalog.ts). Each li
 | Quorum | [Website](https://www.quorummessenger.com/), [web beta](https://app.quorummessenger.com/), [mobile source](https://github.com/QuilibriumNetwork/quorum-mobile), [desktop source](https://github.com/QuilibriumNetwork/quorum-desktop) | An open-source messaging ecosystem with Farcaster integration visible in mobile source. | Release parity, live messaging/security properties, and Farcaster onboarding across devices. |
 | Juke | [Website](https://juke.audio), [source](https://github.com/99darwin/farcaster-audio), [integration reference](https://juke.audio/llms.txt) | Live-audio product with a social feed and developer surfaces. See the focused comparison below. | Production participation, account authorization, recording, and audio behavior with real members. |
 
-The initial 21 listings also include Farcaster, Allthing, Quilcast, herocast, Recaster, Yup, Selfcaster, Bountycaster, Clawberto, Neynar, Hypersnap, Web3.bio, Supercast, and nounspace. This is a curated starting set, not a claim to list every Farcaster application.
+The initial 21 listings also include Farcaster, Allthing, Quilcast, herocast, Recaster, Yup, Selfcaster, Bountycaster, Clawberto, Neynar, Hypersnap, Web3.bio, Supercast, and nounspace. The directory now also covers Buoy, Kiwi News, and far.quest based on current website evidence. These range from monitoring/search to community link curation and an ecosystem portal; each is a neighboring tool rather than necessarily a full social client. This is a curated starting set, not a claim to list every Farcaster application.
+
+## Additional ecosystem tools checked October 23
+
+| Project | Evidence reviewed | Practical fit | Limits observed |
+| --- | --- | --- | --- |
+| [Buoy](https://buoy.club/) | Its current site advertises free Farcaster search and filters, paid keyword alerts/digests/cast watching, and a higher team tier with external notifications and webhooks. | Monitor ZAO, event, artist, or project mentions and surface conversations for human curation. | Monitoring and collaboration features are paid at the published tiers ($10/month Pro and $100/month Max at review); pricing may change. This is a specialist search/alert tool, not a general client. |
+| [Kiwi News](https://news.kiwistand.com/) | Current pages describe a human-curated link aggregator with Hot/New/Best, submission and community-ranking rules, Farcaster posts among current links, and an iPhone beta. | Explore a community-curated discovery model for links and external reading. | It curates links across crypto, tech, and the open web rather than providing a full Farcaster feed or account client. |
+| [far.quest](https://far.quest/) | Its current site still presents a Farcaster Pro Client alongside .cast handles, quests, FarHero, FarMarket, and Wield features; a FarMarket launch post is linked. | Explore a portal combining Farcaster identity, games, and marketplace features. | The site's broad product surface is not a conventional social client; current signup, wallet, marketplace, and client flows were not tested. An earlier checked redirect was stale/inconsistent, so the listing reflects the current page and remains subject to recheck. |
+| [Terminal](https://www.terminal.co/) | The site showed “Maintenance in Progress” during this check. | Keep as a lead for a later recheck. | A maintenance page does not establish that the product is permanently discontinued; no active listing has been added. |
 
 ## Quorum and Juke: different community needs
 

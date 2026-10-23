@@ -14,7 +14,7 @@ export interface DirectoryApp {
   cons: string[];
 }
 
-export const REVIEW_DATE = '2026-10-22';
+export const REVIEW_DATE = '2026-10-23';
 export const CATEGORIES: Category[] = ['Clients', 'Specialist apps', 'Build & explore', 'History'];
 const repo = (name: string) => ({ title: 'Project source', url: `https://github.com/${name}` });
 const site = (url: string) => ({ title: 'Product website', url });
@@ -402,6 +402,72 @@ export const APPS: DirectoryApp[] = [
     cons: [
       'An identity explorer rather than a casting client.',
       'Public associations are context, not proof of who controls every linked account today.',
+    ],
+  },
+  {
+    id: 'buoy',
+    name: 'Buoy',
+    category: 'Specialist apps',
+    tagline: 'Search Farcaster and monitor keywords.',
+    fit: 'Community teams tracking mentions, topics, and opportunities.',
+    platforms: 'Web · iOS · Android',
+    network: 'Farcaster search and notifications',
+    basis: 'Website reviewed',
+    url: 'https://buoy.club',
+    sources: [site('https://buoy.club')],
+    pros: [
+      'The site advertises free search and advanced filters.',
+      'Paid tiers add keyword alerts, digests, cast tracking, and team webhooks.',
+    ],
+    cons: [
+      'Advanced monitoring and collaboration are paid features; check current pricing before adopting.',
+      'A search and alert tool rather than a general-purpose social client.',
+    ],
+  },
+  {
+    id: 'kiwi-news',
+    name: 'Kiwi News',
+    category: 'Specialist apps',
+    tagline: 'A community-curated link aggregator for crypto, tech, and the open web.',
+    fit: 'Finding and discussing useful links outside a chronological social feed.',
+    platforms: 'Web · iPhone beta',
+    network: 'Community-submitted links; includes Farcaster posts',
+    basis: 'Website reviewed',
+    url: 'https://news.kiwistand.com/',
+    sources: [
+      site('https://news.kiwistand.com/'),
+      { title: 'Community submission guidelines', url: 'https://news.kiwistand.com/guidelines' },
+    ],
+    pros: [
+      'Community ranking offers a curated alternative to an endless feed.',
+      'Its current site includes Farcaster links among sources and advertises an iPhone beta.',
+    ],
+    cons: [
+      'Focused on link discovery and discussion, not a full Farcaster client.',
+      'Participation requirements and ranking depend on Kiwi News rules and community activity.',
+    ],
+  },
+  {
+    id: 'far-quest',
+    name: 'far.quest',
+    category: 'Specialist apps',
+    tagline: 'A Farcaster ecosystem portal with a Pro Client, quests, marketplace, and Wield features.',
+    fit: 'Exploring Farcaster identity, games, and marketplace features in one ecosystem.',
+    platforms: 'Web',
+    network: 'Farcaster · Wield',
+    basis: 'Website reviewed',
+    url: 'https://far.quest/',
+    sources: [
+      site('https://far.quest/'),
+      { title: 'FarMarket launch announcement', url: 'https://news.far.quest/farmarket' },
+    ],
+    pros: [
+      'The current site links a Farcaster Pro Client alongside quests, FarHero, and FarMarket.',
+      'A useful example of an ecosystem portal that combines social and game/market features.',
+    ],
+    cons: [
+      'The site leads with .cast handles, marketplace, and Wield; it is broader than a conventional social client.',
+      'The directory has not tested current registration, client, marketplace, or onchain flows.',
     ],
   },
   {
