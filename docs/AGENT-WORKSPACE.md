@@ -1,7 +1,9 @@
 # Community workspace pilot
 
-The pilot lives at `/workspace` in `bettercallzaal/zao-app`, on branch
-`feat/agent-workspace`. It provides a central Command/Cast input, favorite
+The reader pilot lives at `/workspace/review` in `bettercallzaal/zao-app`, on branch
+`main`. The `/` and `/workspace` entry points now show the ZAO Client application
+directory; see [the directory research](CLIENT-OF-CLIENTS-RESEARCH-2026-10-22.md).
+The reader provides a central Command/Cast input, favorite
 commands, public ZAO posts, conversation review, local saves, and editable
 curation and feedback drafts.
 
@@ -14,7 +16,8 @@ $env:ZAO_WORKSPACE_FEED_NODE_URL = 'https://haatz.quilibrium.com'
 npm run dev -- --hostname 127.0.0.1 --port 3100
 ```
 
-Open <http://127.0.0.1:3100/workspace>. The enriched v2 channel API and raw
+Open <http://127.0.0.1:3100/workspace/review> for the reader, or
+<http://127.0.0.1:3100/workspace> for the directory. The enriched v2 channel API and raw
 thread node can be selected independently. Both overrides are optional; without
 them the workspace uses `https://haatz.quilibrium.com`. The separate public
 feed override avoids an observed listing/index issue in the older local node.

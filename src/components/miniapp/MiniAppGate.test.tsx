@@ -39,8 +39,13 @@ it('authenticates through verified QuickAuth without trusting the context FID', 
   expect(context).not.toHaveBeenCalled();
   await screen.findByText('Member content');
 });
-it('keeps the public workspace independent of credentialed authentication', async () => {
-  window.history.replaceState({}, '', '/workspace');
+it.each([
+  '/',
+  '/workspace',
+  '/workspace/review',
+  '/developers',
+])('keeps public route %s independent of credentialed authentication', async (path) => {
+  window.history.replaceState({}, '', path);
   render(
     <MiniAppGate>
       <p>Public workspace</p>

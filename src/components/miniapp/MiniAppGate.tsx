@@ -38,7 +38,7 @@ export function MiniAppGate({ children }: MiniAppGateProps) {
         const path = window.location.pathname;
 
         // Standalone miniapp and public workspace/developer pages render directly.
-        if (path === '/miniapp' || path === '/workspace' || path === '/developers') {
+        if (['/', '/miniapp', '/workspace', '/workspace/review', '/developers'].includes(path)) {
           setState('web'); // render as normal page
           return;
         }
