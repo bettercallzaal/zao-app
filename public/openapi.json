@@ -1,0 +1,260 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ZAO Public Read API",
+    "version": "0.1.0",
+    "description": "Read-only beta; no API key. Production: 30 requests/minute/IP shared across endpoints, Upstash required. Local development bypasses rate limits without Redis. GET/HEAD/OPTIONS with CORS. Success cache 20 seconds; errors not cached. Node-local search coverage and ranking are not guarantees. Channel may use a separate source. Read source and coverage in responses."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/api/public/v1/search": {
+      "get": {
+        "operationId": "search",
+        "summary": "search",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "description": "Plain text only. No search operators."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 10
+            },
+            "description": "Requested per-shard limit. Preserve the full returned batch, up to 96 posts."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "description": "Opaque nextCursor from previous response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public normalized read. Timestamp uses Unix milliseconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string"
+                    },
+                    "checkedAt": {
+                      "type": "string"
+                    },
+                    "coverage": {
+                      "type": "string"
+                    },
+                    "posts": {
+                      "type": "array",
+                      "maxItems": 96,
+                      "items": {
+                        "$ref": "#/components/schemas/Post"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "404": {
+            "description": "Cast missing when reported by upstream"
+          },
+          "429": {
+            "description": "Rate limited; see Retry-After"
+          },
+          "503": {
+            "description": "Node unavailable, invalid response, or capacity exceeded"
+          }
+        }
+      }
+    },
+    "/api/public/v1/cast": {
+      "get": {
+        "operationId": "cast",
+        "summary": "cast",
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[0-9a-fA-F]{40}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public normalized read. Timestamp uses Unix milliseconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string"
+                    },
+                    "checkedAt": {
+                      "type": "string"
+                    },
+                    "coverage": {
+                      "type": "string"
+                    },
+                    "post": {
+                      "$ref": "#/components/schemas/Post"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "404": {
+            "description": "Cast missing when reported by upstream"
+          },
+          "429": {
+            "description": "Rate limited; see Retry-After"
+          },
+          "503": {
+            "description": "Node unavailable, invalid response, or capacity exceeded"
+          }
+        }
+      }
+    },
+    "/api/public/v1/channel": {
+      "get": {
+        "operationId": "channel",
+        "summary": "channel",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "description": "Opaque nextCursor from previous response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public normalized read. Timestamp uses Unix milliseconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string"
+                    },
+                    "checkedAt": {
+                      "type": "string"
+                    },
+                    "coverage": {
+                      "type": "string"
+                    },
+                    "posts": {
+                      "type": "array",
+                      "maxItems": 96,
+                      "items": {
+                        "$ref": "#/components/schemas/Post"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "404": {
+            "description": "Cast missing when reported by upstream"
+          },
+          "429": {
+            "description": "Rate limited; see Retry-After"
+          },
+          "503": {
+            "description": "Node unavailable, invalid response, or capacity exceeded"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Post": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "fid": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "number"
+          },
+          "username": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "embeds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

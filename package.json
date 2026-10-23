@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "check:deployment": "node scripts/check-deployment.mjs",
     "diagnose:workspace": "node scripts/diagnose-workspace.mjs",
+    "research:hypersnap": "node scripts/research-hypersnap.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint:biome": "biome check .",

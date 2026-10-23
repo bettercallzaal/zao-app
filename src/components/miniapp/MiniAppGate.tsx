@@ -37,8 +37,8 @@ export function MiniAppGate({ children }: MiniAppGateProps) {
 
         const path = window.location.pathname;
 
-        // /miniapp has its own full-screen UI — don't gate it
-        if (path === '/miniapp' || path === '/workspace') {
+        // Standalone miniapp and public workspace/developer pages render directly.
+        if (path === '/miniapp' || path === '/workspace' || path === '/developers') {
           setState('web'); // render as normal page
           return;
         }

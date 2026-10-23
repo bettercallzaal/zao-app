@@ -12,6 +12,7 @@ interface RateLimitConfig {
 // Rate limit configs ordered from most-specific to least-specific prefix.
 // The first matching prefix wins, so sub-routes must appear before their parent.
 const RATE_LIMITS: [string, RateLimitConfig][] = [
+  ['/api/public/v1/', { limit: 30, windowMs: MINUTE }],
   ['/api/miniapp/auth-context', {limit:10,windowMs:MINUTE}],
   ['/api/miniapp/auth', {limit:10,windowMs:MINUTE}],
   ['/api/workspace', { limit: 30, windowMs: MINUTE }],
@@ -87,7 +88,13 @@ function addSecurityHeaders(
   nonce?: string,
   _pathname?: string,
 ): NextResponse {
-  if (_pathname?.startsWith('/api/') && !_pathname.startsWith('/api/workspace/')) {
+  if (_pathname?.startsWith('/api/public/')) {
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Accept');
+    response.headers.set('Access-Control-Expose-Headers', 'Retry-After');
+  }
+  if (_pathname?.startsWith('/api/') && !_pathname.startsWith('/api/workspace/') && !_pathname.startsWith('/api/public/')) {
     response.headers.set('Cache-Control', 'private, no-store');
   }
   // Intentionally NOT setting X-Frame-Options. Modern browsers honor the CSP
@@ -111,6 +118,13 @@ function addSecurityHeaders(
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (pathname.startsWith('/api/public/')) {
+    if (request.method === 'OPTIONS') return addSecurityHeaders(new NextResponse(null, { status: 204 }), undefined, pathname);
+    if (!['GET', 'HEAD'].includes(request.method)) {
+      const response = NextResponse.json({ error: 'read_only' }, { status: 405, headers: { Allow: 'GET, HEAD, OPTIONS', 'Cache-Control': 'no-store' } });
+      return addSecurityHeaders(response, undefined, pathname);
+    }
+  }
   if (!allowsBrowserMutation(request, process.env.NEXT_PUBLIC_APP_URL)) {
     return addSecurityHeaders(NextResponse.json({error:'Cross-origin write refused'}, {status:403}), undefined, pathname);
   }
@@ -149,12 +163,13 @@ export async function middleware(request: NextRequest) {
       request.headers.get('x-real-ip') ||
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       'unknown';
-    const key = `${ip}:${pathname}`;
+    const key = `${ip}:${pathname.startsWith('/api/public/v1/') ? '/api/public/v1/' : pathname}`;
     const result = await rateLimit(key, config.limit, config.windowMs);
 
     if (!result.success) {
       const errorResponse = NextResponse.json({ error: 'Too many requests' }, { status: 429 });
       errorResponse.headers.set('Retry-After', String(Math.ceil(config.windowMs / 1000)));
+      errorResponse.headers.set('Cache-Control', 'no-store');
       return addSecurityHeaders(errorResponse, undefined, pathname);
     }
   }
