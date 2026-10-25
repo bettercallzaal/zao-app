@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "The ZAO",
+    "slug": "zao-app",
+    "scheme": "thezao",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0a1628",
+    "ios": {
+      "bundleIdentifier": "com.thezao.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["audio"]
+      }
+    },
+    "plugins": ["expo-audio"]
+  }
+}

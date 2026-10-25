@@ -1,0 +1,16 @@
+{
+  "cli": { "appVersionSource": "remote" },
+  "build": {
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ZAO_API_BASE": ""
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {}
+    }
+  }
+}
