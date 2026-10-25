@@ -11,7 +11,7 @@ export interface EstateSurface {
 }
 
 export const estateSurfaces: EstateSurface[] = [
-  { name: 'The ZAO app', url: 'https://zaoos.com' },
+  { name: 'ZAO OS', url: 'https://zaoos.com' },
   { name: 'The ZAO site', url: 'https://thezao.xyz' },
   { name: 'ZAO calendar', url: 'https://luma.com/zao' },
   { name: 'zao-app source', url: 'https://github.com/bettercallzaal/zao-app' },

@@ -4,7 +4,7 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_ZAO_API_BASE": "https://zaoos.com"
+        "EXPO_PUBLIC_ZAO_API_BASE": ""
       }
     }
   },

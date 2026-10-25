@@ -27,7 +27,7 @@ All three are read-only and need no sign-in.
 
 | Screen | Data | Notes |
 |--------|------|-------|
-| Feed | `GET {API_BASE}/api/public/v1/channel` | Same normalized posts as the web workspace feed. Cursor paging. **Measured 2026-10-25: `https://zaoos.com/api/public/v1/channel` returns 404**, so the deployed site does not serve this route yet. The screen shows a clear error until the deploy that carries it is live, or `EXPO_PUBLIC_ZAO_API_BASE` points at a deploy that does. |
+| Feed | `GET {EXPO_PUBLIC_ZAO_API_BASE}/api/public/v1/channel` | Same normalized posts as the web workspace feed. Cursor paging. **The base is left empty on purpose.** Measured 2026-10-25: zaoos.com serves ZAO OS (page title "ZAO OS - The ZAO Community"), not this app, and returns 404 for this route. zao-app's own GitHub deployment record shows 29 of 29 production deployments in state `failure` (Vercel project `zcaster`), so no host serves zao-app's API yet. Until a production origin exists and is set in `eas.json`, the Feed tab says "Feed not configured". |
 | Music | Audius public API (`api.audius.co/v1/resolve`, then playlist tracks), the same three public playlists as `community.config.ts` `music.radioPlaylists` | The web `/api/music/radio` route needs a session (401 without one), so the phone reads Audius directly. Playback uses `expo-audio`. |
 | Estate | A bundled, hand-written list of public ZAO surfaces (`apps/mobile/src/lib/estate.ts`), each checked with a plain HTTPS request from the phone | **Placeholder and public-only.** It never calls `127.0.0.1:7477`, the vault, or any private host. A test (`scripts/mobile-estate.test.ts`) fails CI if the list ever holds a loopback, private-range, `.local` or non-HTTPS address, or the words "vault" or "7477". |
 
@@ -77,7 +77,7 @@ Gated, Zaal only (each needs his Apple ID, App Store Connect or Expo account; cr
 6. First submit, interactive: `npx eas-cli submit -p ios --latest`. Then put the numeric `ascAppId` into `eas.json`.
 7. Internal testers only (App Store Connect team members). No external testers and no public listing without a separate decision.
 
-Before step 5, point `EXPO_PUBLIC_ZAO_API_BASE` in `eas.json` at a deploy where `/api/public/v1/channel` returns 200, or the Feed tab ships empty. That is the playbook's first pitfall: EAS uploads respect `.gitignore`, so a value in `.env.local` never reaches the build.
+Before step 5, set `EXPO_PUBLIC_ZAO_API_BASE` in `eas.json` (empty today) to the zao-app production origin, once one exists, where `/api/public/v1/channel` returns 200, or the Feed tab ships empty. That is the playbook's first pitfall: EAS uploads respect `.gitignore`, so a value in `.env.local` never reaches the build.
 
 ## Sources
 
