@@ -1,11 +1,17 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { estateSurfaces } from '../apps/mobile/src/lib/estate';
 
 // The phone app's estate view is public-only. It must never point at the
 // local status server, the vault, or any loopback or private-network host.
 const MOBILE = path.resolve(__dirname, '../apps/mobile');
+
+// Read as text, not imported: apps/mobile/tsconfig.json extends the Expo base,
+// which the web repo's install does not have, so vite cannot transform it.
+const estateSource = readFileSync(path.join(MOBILE, 'src/lib/estate.ts'), 'utf8');
+const estateSurfaces = [
+  ...estateSource.matchAll(/\{\s*name:\s*'([^']*)',\s*url:\s*'([^']*)'\s*\}/g),
+].map((m) => ({ name: m[1], url: m[2] }));
 
 function problem(url: string, name = ''): string | null {
   let u: URL;
@@ -45,6 +51,8 @@ describe('mobile estate view', () => {
   });
 
   it('lists only public https surfaces', () => {
+    // Every url literal in the file is one parsed entry, so a reshaped entry cannot slip past.
+    expect(estateSurfaces.length).toBe((estateSource.match(/url:\s*['"`]/g) ?? []).length);
     expect(estateSurfaces.length).toBeGreaterThan(0);
     for (const s of estateSurfaces) expect(problem(s.url, s.name), s.url).toBeNull();
   });
