@@ -12,18 +12,15 @@ curation and feedback drafts.
 ```powershell
 npm ci
 $env:ZAO_WORKSPACE_NODE_URL = 'http://127.0.0.1:3381'
-$env:ZAO_WORKSPACE_FEED_NODE_URL = 'https://haatz.quilibrium.com'
 npm run dev -- --hostname 127.0.0.1 --port 3100
 ```
 
 Open <http://127.0.0.1:3100/workspace/review> for the reader, or
-<http://127.0.0.1:3100/workspace> for the directory. The enriched v2 channel API and raw
-thread node can be selected independently. Both overrides are optional; without
-them the workspace uses `https://haatz.quilibrium.com`. The separate public
-feed override avoids an observed listing/index issue in the older local node.
-A deployed preview must
-use a node URL reachable from its server; localhost on Vercel is not your PC.
-Never expose the node's administrative interfaces to make this work.
+<http://127.0.0.1:3100/workspace> for the directory. All workspace feeds,
+profiles, search, and thread reads use the node set in `ZAO_WORKSPACE_NODE_URL`.
+There is no public-node fallback. A deployed preview must use your own node URL
+reachable from its server; localhost on Vercel is not your PC. Never expose the
+node's administrative interfaces to make this work.
 
 ## Test these workflows
 

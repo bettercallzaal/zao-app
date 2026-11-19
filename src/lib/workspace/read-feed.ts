@@ -36,10 +36,9 @@ export async function readRawWorkspaceFeed(
   options: { fid?: number; hash?: string; token?: string } = {},
 ): Promise<WorkspaceFeed> {
   // Server-controlled only. A caller cannot turn this route into an arbitrary URL proxy.
-  const base = (process.env.ZAO_WORKSPACE_NODE_URL || 'https://haatz.quilibrium.com').replace(
-    /\/$/,
-    '',
-  );
+  const configuredNode = process.env.ZAO_WORKSPACE_NODE_URL;
+  if (!configuredNode) throw new Error('ZAO_WORKSPACE_NODE_URL is required');
+  const base = configuredNode.replace(/\/$/, '');
   const params = options.hash
     ? new URLSearchParams({
         fid: String(options.fid),
@@ -108,7 +107,7 @@ export async function readRawWorkspaceFeed(
   }));
   const result = {
     posts,
-    source: process.env.ZAO_WORKSPACE_NODE_URL ? "ZAO's Hypersnap node" : 'Public Hypersnap node',
+    source: 'ZAO configured Hypersnap node',
     checkedAt: new Date().toISOString(),
     nextPageToken:
       typeof data.nextPageToken === 'string' &&

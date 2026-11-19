@@ -6,7 +6,6 @@ import {
 } from './model';
 import { readNodeJson } from './node-json';
 
-const PUBLIC_NODE = 'https://haatz.quilibrium.com';
 const CHANNEL_PARENT_URL = 'https://warpcast.com/~/channel/zao';
 const cache = new Map<string, { expires: number; value: WorkspaceFeed }>();
 
@@ -42,13 +41,11 @@ export function normalizeChannelCast(value: unknown): WorkspacePost | null {
 }
 
 export async function readChannelFeed(token?: string): Promise<WorkspaceFeed> {
-  // Separate server-owned read sources: an older node can hold a cast while
-  // its channel index omits it. Never silently substitute a different source.
-  const base = (
-    process.env.ZAO_WORKSPACE_FEED_NODE_URL ||
-    process.env.ZAO_WORKSPACE_NODE_URL ||
-    PUBLIC_NODE
-  ).replace(/\/$/, '');
+  // All reads come from the operator-configured node. Do not silently switch
+  // to another operator's node when this one is missing or unavailable.
+  const configuredNode = process.env.ZAO_WORKSPACE_NODE_URL;
+  if (!configuredNode) throw new Error('ZAO_WORKSPACE_NODE_URL is required');
+  const base = configuredNode.replace(/\/$/, '');
   const params = new URLSearchParams({
     parent_urls: CHANNEL_PARENT_URL,
     limit: '12',
@@ -82,8 +79,7 @@ export async function readChannelFeed(token?: string): Promise<WorkspaceFeed> {
     posts: [...new Map(posts.map((post) => [post.hash, post])).values()].sort(
       (a, b) => b.timestamp - a.timestamp,
     ),
-    source:
-      base === PUBLIC_NODE ? 'Public Hypersnap channel API' : 'Configured Hypersnap channel API',
+    source: 'ZAO configured Hypersnap node',
     checkedAt: new Date().toISOString(),
     nextPageToken: cursor || null,
   };
