@@ -9,6 +9,13 @@ afterEach(() => {
 });
 
 describe('workspace node integration', () => {
+  it('requires the operator node instead of falling back to a public node', async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal('fetch', fetcher);
+    await expect(readWorkspaceFeed()).rejects.toThrow('ZAO_WORKSPACE_NODE_URL is required');
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it('preserves embeds and casts when a profile fails, and bounds requests to fixed routes', async () => {
     vi.stubEnv('ZAO_WORKSPACE_NODE_URL', 'http://127.0.0.1:3381');
     const fetcher = vi.fn().mockImplementation(async (url: string) => {

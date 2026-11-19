@@ -16,7 +16,8 @@ const cast = (index: number) => ({
 });
 
 it('keeps all multi-shard casts, sorts newest first, and preserves a real-length cursor', async () => {
-  vi.stubEnv('ZAO_WORKSPACE_FEED_NODE_URL', 'https://channel-adapter.test');
+  vi.stubEnv('ZAO_WORKSPACE_NODE_URL', 'https://zao-node.test');
+  vi.stubEnv('ZAO_WORKSPACE_FEED_NODE_URL', 'https://ignored-secondary.test');
   const cursor = 'c'.repeat(890);
   const fetcher = vi.fn(
     async (_url: string) =>
@@ -33,11 +34,12 @@ it('keeps all multi-shard casts, sorts newest first, and preserves a real-length
   expect(feed.nextPageToken).toBe(cursor);
   await readChannelFeed(cursor);
   expect(new URL(fetcher.mock.calls[1][0]).searchParams.get('cursor')).toBe(cursor);
-  expect(fetcher.mock.calls[0][0]).toContain('/v2/farcaster/feed/parent_urls?');
+  expect(fetcher.mock.calls[0][0]).toContain('https://zao-node.test/v2/farcaster/feed/parent_urls?');
+  expect(feed.source).toBe('ZAO configured Hypersnap node');
 });
 
 it('refuses an unrelated feed even when the upstream ignores the channel filter', async () => {
-  vi.stubEnv('ZAO_WORKSPACE_FEED_NODE_URL', 'https://wrong-channel.test');
+  vi.stubEnv('ZAO_WORKSPACE_NODE_URL', 'https://wrong-channel.test');
   vi.stubGlobal(
     'fetch',
     vi.fn(
@@ -53,7 +55,7 @@ it('refuses an unrelated feed even when the upstream ignores the channel filter'
 });
 
 it('does not turn an error payload or unreadable casts into an empty successful feed', async () => {
-  vi.stubEnv('ZAO_WORKSPACE_FEED_NODE_URL', 'https://bad-channel.test');
+  vi.stubEnv('ZAO_WORKSPACE_NODE_URL', 'https://bad-channel.test');
   vi.stubGlobal(
     'fetch',
     vi.fn(async () => new Response(JSON.stringify({ error: 'unavailable' }))),
@@ -61,4 +63,12 @@ it('does not turn an error payload or unreadable casts into an empty successful 
   await expect(readChannelFeed()).rejects.toThrow('Invalid channel feed');
   expect(normalizeChannelCast({ ...cast(1), timestamp: 'not a date' })).toBeNull();
   expect(normalizeChannelCast({ ...cast(1), author: { fid: -1 } })).toBeNull();
+});
+
+it('requires the operator node instead of falling back to a public node', async () => {
+  vi.stubEnv('ZAO_WORKSPACE_FEED_NODE_URL', 'https://other-operator.test');
+  const fetcher = vi.fn();
+  vi.stubGlobal('fetch', fetcher);
+  await expect(readChannelFeed()).rejects.toThrow('ZAO_WORKSPACE_NODE_URL is required');
+  expect(fetcher).not.toHaveBeenCalled();
 });

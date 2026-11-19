@@ -23,17 +23,18 @@ do not send them through chat or commit them to Git. Existing app-signing
 credentials must belong to the configured app FID. Do not generate an arbitrary
 key and assume that it controls an existing FID.
 
-## Public reads
+## Hypersnap reads
 
-Omit `ZAO_WORKSPACE_NODE_URL` and `ZAO_WORKSPACE_FEED_NODE_URL` in Vercel to use
-the public Hypersnap source. A Vercel function cannot reach your PC's
-`127.0.0.1:3381`. A future private-node connection needs a deliberately hosted,
-restricted read gateway reachable by the server; never expose raw node/admin
-ports to make a deployment pass.
+Set `ZAO_WORKSPACE_NODE_URL` to your own Hypersnap node or a deliberately hosted,
+restricted read gateway reachable by the server. The workspace does not fall
+back to another operator's public node. A Vercel function cannot reach your
+PC's `127.0.0.1:3381`; never expose raw node/admin ports to make a deployment
+pass. The workspace currently uses the node's read API; direct Hypersnap writes
+require a separate registered signer and gRPC submission implementation.
 
-Locally, the ignored `.env.local` created during this work contains only the
-local raw node URL and public enriched feed URL. It contains none of the
-required Supabase/Neynar/session/app-signing/Upstash secrets.
+Locally, the ignored `.env.local` created during this work contains the local
+node URL. It contains none of the required Supabase/session/app-signing/Upstash
+secrets.
 
 ## Check before deploying
 
